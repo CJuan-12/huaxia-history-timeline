@@ -10,6 +10,7 @@ import {
   type PointerEvent,
   type WheelEvent,
 } from "react";
+import { rulersByEra, type RulerProfile } from "./ruler-profiles";
 
 type EventItem = {
   year: string;
@@ -360,11 +361,14 @@ function clamp(value: number, min: number, max: number) {
 
 export default function Home() {
   const railRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const rulerOpenerRef = useRef<HTMLButtonElement | null>(null);
   const panelRefs = useRef<Array<HTMLElement | null>>([]);
   const dragRef = useRef({ active: false, startX: 0, startScroll: 0 });
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [selectedRuler, setSelectedRuler] = useState<RulerProfile | null>(null);
 
   const currentEra = eras[current];
 
@@ -404,6 +408,11 @@ export default function Home() {
       cancelAnimationFrame(frame);
     };
   }, [updateFromScroll]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (selectedRuler && dialog && !dialog.open) dialog.showModal();
+  }, [selectedRuler]);
 
   const scrollToEra = useCallback((index: number) => {
     const next = clamp(index, 0, eras.length - 1);
@@ -458,7 +467,24 @@ export default function Home() {
     }
   };
 
+  const openRuler = (ruler: RulerProfile, opener: HTMLButtonElement) => {
+    rulerOpenerRef.current = opener;
+    setSelectedRuler(ruler);
+  };
+
+  const closeRuler = () => {
+    const dialog = dialogRef.current;
+    if (dialog?.open) dialog.close();
+    else setSelectedRuler(null);
+  };
+
+  const restoreRulerFocus = () => {
+    setSelectedRuler(null);
+    requestAnimationFrame(() => rulerOpenerRef.current?.focus());
+  };
+
   const handleKeyboard = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) return;
     if (event.key === "ArrowRight") {
       event.preventDefault();
       scrollToEra(current + 1);
@@ -500,13 +526,14 @@ export default function Home() {
         <p className="eyebrow">从夏商周到帝制终章</p>
         <h1 id="page-title">沿着时间，横向展开中国古代史</h1>
         <p className="hero-copy">
-          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。每一张大事记卡片都可以点击展开。
+          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。展开大事记，也可以点击代表君王查看身份与性格档案。
         </p>
         <div className="gesture-hints" aria-label="操作提示">
           <span>拖拽横移</span>
           <span>滚轮浏览</span>
           <span>左右键切换</span>
           <span>卡片点击展开</span>
+          <span>君王档案</span>
         </div>
       </section>
 
@@ -613,6 +640,53 @@ export default function Home() {
                 </div>
               </div>
 
+              {rulersByEra[era.id]?.length ? (
+                <section className="featured-rulers" aria-labelledby={`rulers-${era.id}`}>
+                  <div className="ruler-section-heading">
+                    <div>
+                      <span>人物切面</span>
+                      <h3 id={`rulers-${era.id}`}>代表君王</h3>
+                    </div>
+                    <small>点击人物，打开身份与性格档案</small>
+                  </div>
+                  <div className="ruler-grid">
+                    {rulersByEra[era.id].map((ruler) => (
+                      <button
+                        className="ruler-teaser"
+                        type="button"
+                        key={ruler.id}
+                        aria-haspopup="dialog"
+                        onClick={(event) => openRuler(ruler, event.currentTarget)}
+                      >
+                        <span className="ruler-teaser-portrait">
+                          <img
+                            src={ruler.portrait.src}
+                            alt={ruler.portrait.alt}
+                            width="92"
+                            height="118"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <small>{ruler.portrait.kind}</small>
+                        </span>
+                        <span className="ruler-teaser-copy">
+                          <span className="ruler-dynasty">{ruler.dynasty} · {ruler.reign}</span>
+                          <span className="mbti-mini" aria-label={`MBTI 趣味推演：${ruler.mbti.code}`}>
+                            {ruler.mbti.code}
+                          </span>
+                          <strong>{ruler.name}</strong>
+                          <em>{ruler.personalName} · {ruler.title}</em>
+                          <span className="trait-list" aria-label="性格标签">
+                            {ruler.traits.map((trait) => <i key={trait}>{trait}</i>)}
+                          </span>
+                          <span className="ruler-open-label">查看完整档案 →</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
               <div className="events-heading">
                 <span>大事记</span>
                 <small>点击卡片查看详情</small>
@@ -638,9 +712,114 @@ export default function Home() {
         </div>
       </section>
 
+      <dialog
+        ref={dialogRef}
+        className="ruler-dialog"
+        aria-labelledby={selectedRuler ? "ruler-dialog-title" : undefined}
+        aria-describedby={selectedRuler ? "ruler-dialog-description" : undefined}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeRuler();
+        }}
+        onClose={restoreRulerFocus}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) closeRuler();
+        }}
+      >
+        {selectedRuler ? (
+          <div className="ruler-dialog-shell">
+            <button className="dialog-close" type="button" onClick={closeRuler} aria-label="关闭君王档案">
+              <span aria-hidden="true">×</span>
+              关闭
+            </button>
+
+            <figure className="ruler-portrait-large">
+              <img
+                src={selectedRuler.portrait.src}
+                alt={selectedRuler.portrait.alt}
+                width="520"
+                height="680"
+              />
+              <figcaption>
+                <span>{selectedRuler.portrait.kind}</span>
+                <a href={selectedRuler.portrait.sourceUrl} target="_blank" rel="noreferrer">
+                  {selectedRuler.portrait.credit}
+                </a>
+              </figcaption>
+            </figure>
+
+            <article className="ruler-profile">
+              <p className="ruler-profile-kicker">{selectedRuler.dynasty} · 君王身份卡</p>
+              <h2 id="ruler-dialog-title">{selectedRuler.name}</h2>
+              <p className="ruler-profile-name">{selectedRuler.personalName} <span>{selectedRuler.title}</span></p>
+
+              <dl className="ruler-facts">
+                <div><dt>在位</dt><dd>{selectedRuler.reign}</dd></div>
+                <div><dt>生卒</dt><dd>{selectedRuler.lifespan}</dd></div>
+              </dl>
+
+              <p className="ruler-identity" id="ruler-dialog-description">{selectedRuler.identity}</p>
+
+              <div className="profile-traits" aria-label="史料性格标签">
+                {selectedRuler.traits.map((trait) => <span key={trait}>{trait}</span>)}
+              </div>
+
+              <section className="mbti-card" aria-labelledby="mbti-title">
+                <div className="mbti-heading">
+                  <div>
+                    <span>MBTI · 趣味推演</span>
+                    <h3 id="mbti-title">{selectedRuler.mbti.label}</h3>
+                  </div>
+                  <strong>{selectedRuler.mbti.code}</strong>
+                </div>
+                <p className="mbti-summary">{selectedRuler.mbti.summary}</p>
+                <div className="mbti-dimensions">
+                  {selectedRuler.mbti.dimensions.map((dimension) => (
+                    <div key={dimension.letter}>
+                      <b>{dimension.letter}</b>
+                      <span>{dimension.name}</span>
+                      <p>{dimension.evidence}</p>
+                    </div>
+                  ))}
+                </div>
+                <small>
+                  历史人物无法完成现代标准化问卷；此类型仅把史料中的行为、决策与兴趣映射到 MBTI 维度，不是学术定论或心理诊断。
+                </small>
+              </section>
+
+              <section className="personality-card">
+                <div className="profile-section-title">
+                  <h3>史料性格侧写</h3>
+                  <span>行为概括，非心理诊断</span>
+                </div>
+                <p>{selectedRuler.personality}</p>
+              </section>
+
+              <div className="profile-columns">
+                <section>
+                  <h3>主要作为</h3>
+                  <ul>{selectedRuler.achievements.map((item) => <li key={item}>{item}</li>)}</ul>
+                </section>
+                <section className="profile-limits">
+                  <h3>争议与局限</h3>
+                  <ul>{selectedRuler.limits.map((item) => <li key={item}>{item}</li>)}</ul>
+                </section>
+              </div>
+
+              <section className="profile-ending">
+                <h3>人物结局</h3>
+                <p>{selectedRuler.ending}</p>
+              </section>
+
+              <blockquote>{selectedRuler.assessment}</blockquote>
+            </article>
+          </div>
+        ) : null}
+      </dialog>
+
       <footer>
         <p>历史并非一条笔直的线，而是制度、战争、财政、人物与环境交织而成的长卷。</p>
-        <span>内容依据《中国古代历代君主与王朝覆灭原因》整理</span>
+        <span>MBTI 为基于史料行为与兴趣的趣味推演；古代画像不等同于真实照片</span>
       </footer>
     </main>
   );
