@@ -1,9 +1,11 @@
 import { rulerProfiles, type RulerProfile } from "./ruler-profiles";
+import { buildPsychologyAssessment } from "./ruler-psychology";
+import type { PsychologyAssessment } from "./ruler-psychology-types";
 
 /**
  * Lightweight catalogue metadata layered over the twelve fully researched
- * profiles.  An index-only entry is deliberately explicit about the limits of
- * its portrait and personality evidence; it never invents a face or an MBTI.
+ * profiles. Index-only entries use evidence-ranked behavioural candidates and
+ * remain explicit when relationship or personality records are scarce.
  */
 export type CatalogRulerProfile = RulerProfile & {
   polity: string;
@@ -13,6 +15,7 @@ export type CatalogRulerProfile = RulerProfile & {
   evidenceLevel: "curated" | "index";
   portraitStatus: "available" | "unavailable";
   mbtiStatus: "inferred" | "withheld";
+  psychology: PsychologyAssessment;
   featuredRank?: number;
 };
 
@@ -171,6 +174,13 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
   const curatedId = curatedIdBySeedKey[seedKey];
   const curated = curatedId ? curatedById.get(curatedId) : undefined;
   const aliases = Array.from(new Set([seed.name, ...(seed.aliases ?? []), ...(curated ? [curated.name, curated.personalName] : [])]));
+  const psychology = buildPsychologyAssessment({
+    key: seedKey,
+    name: seed.name,
+    polity: seed.polity,
+    eraId: seed.eraId,
+    order: seed.order,
+  }, curated?.mbti);
 
   if (curated) {
     return {
@@ -183,6 +193,7 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
       evidenceLevel: "curated",
       portraitStatus: curated.portrait.src ? "available" : "unavailable",
       mbtiStatus: "inferred",
+      psychology,
     };
   }
 
@@ -202,25 +213,26 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
       kind: "暂无可靠传世画像",
       credit: "未采用现代想象图，以免把生成形象误作历史肖像。",
     },
-    traits: ["史料待核", "不作臆测"],
+    traits: [psychology.label, psychology.confidenceLabel],
     mbti: {
-      code: "待考",
-      label: "证据不足",
-      summary: "现有索引级材料不足以可靠映射现代 MBTI；在补齐行为、决策与兴趣证据前暂不推测。",
-      dimensions: [],
+      code: psychology.code,
+      label: psychology.label,
+      summary: psychology.summary,
+      dimensions: psychology.dimensions,
     },
-    personality: "暂不以零散记载或后世文学形象推定性格。后续补充将区分同时代记录、正史叙述与民间传说。",
+    personality: `${psychology.basis}关系维度中缺载的部分会明确标注，不把政治名分直接当作私人感情。`,
     achievements: ["已纳入完整君主世系目录；专题事迹等待史料核对。"],
-    limits: ["当前为索引级身份卡，不代表完整人物传记。", "画像与 MBTI 均因证据不足而明确留空。"],
+    limits: ["当前为索引级身份卡，不代表完整人物传记。", `${psychology.confidenceLabel}仅表示基于现有行为线索的候选类型。`],
     ending: "结局与继承关系待专门史料卡补充。",
-    assessment: "先保证人物、政权与次序可检索，再逐步扩充可验证的个体材料。",
+    assessment: "关系行为可以扩充观察面，却不能替代缺失史料；卡片会同时展示推演依据与证据强弱。",
     polity: seed.polity,
     order: seed.order,
     aliases,
     searchText: [seed.name, ...aliases, seed.polity].join(" "),
     evidenceLevel: "index",
     portraitStatus: "unavailable",
-    mbtiStatus: "withheld",
+    mbtiStatus: "inferred",
+    psychology,
   };
 }
 
@@ -273,5 +285,8 @@ export const catalogStats = {
   portraitUnavailable: allRulerProfiles.filter((profile) => profile.portraitStatus === "unavailable").length,
   mbtiInferred: allRulerProfiles.filter((profile) => profile.mbtiStatus === "inferred").length,
   mbtiWithheld: allRulerProfiles.filter((profile) => profile.mbtiStatus === "withheld").length,
+  mbtiMedium: allRulerProfiles.filter((profile) => profile.psychology.confidence === "medium").length,
+  mbtiLow: allRulerProfiles.filter((profile) => profile.psychology.confidence === "low").length,
+  mbtiStructural: allRulerProfiles.filter((profile) => profile.psychology.structuralProxy).length,
   byEra,
 } as const;

@@ -59,7 +59,7 @@ export const rulerProfiles: RulerProfile[] = [
       dimensions: [
         { letter: "E", name: "外向驱动", evidence: "反复全国巡行、刻石宣示，把个人意志主动投射到天下秩序。" },
         { letter: "N", name: "整体想象", evidence: "从六国并立直接设想统一文字、道路和行政体系。" },
-        { letter: "T", name: "理性决断", evidence: "更看重制度效率与控制效果，较少为人情关系保留弹性。" },
+        { letter: "T", name: "规则权衡", evidence: "更看重制度效率与控制效果，较少为人情关系保留弹性。" },
         { letter: "J", name: "计划控制", evidence: "工程、法规与官僚体系均追求可规划、可检查和统一执行。" },
       ],
     },

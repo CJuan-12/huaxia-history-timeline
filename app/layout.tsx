@@ -9,7 +9,7 @@ const publicSiteOrigin =
 export const metadata: Metadata = {
   metadataBase: new URL(publicSiteOrigin),
   title: "华夏长卷｜中国古代历史时间轴",
-  description: "以横向时间轴浏览从夏商周到清末的中国古代历史，检索 443 位君主身份档案，查看重大事件、MBTI 行为推演及王朝覆灭原因。",
+  description: "以横向时间轴浏览从夏商周到清末的中国古代历史，检索 443 位君主身份档案，查看重大事件、关系行为与分级置信的 MBTI 候选及王朝覆灭原因。",
   openGraph: {
     title: "华夏长卷｜中国古代历史时间轴",
     description: "横向穿行 23 个历史时期，检索 443 位君主身份档案。",

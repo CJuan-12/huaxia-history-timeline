@@ -40,6 +40,21 @@ type Era = {
   events: EventItem[];
 };
 
+const mbtiCriteria = [
+  { key: "E / I", title: "互动取向", text: "比较公开动员、边互动边判断，与独处反思、小范围深谈；朝会和出征本身不直接算 E。" },
+  { key: "S / N", title: "信息取向", text: "比较成例、资源与具体执行，和制度重构、整体格局与长期可能；守旧或改革不能单独定型。" },
+  { key: "T / F", title: "权衡取向", text: "比较一致规则、利害和效能，与忠诚、伦理、关系及人的处境；残酷不等于 T，情绪强烈也不等于 F。" },
+  { key: "J / P", title: "行动取向", text: "比较预先定案、标准化与持续执行，和保留选项、临机调整；专制不等于 J，失控也不等于 P。" },
+] as const;
+
+const relationshipCriteria = [
+  { title: "个人情感", text: "观察依恋、悲恸、宽恕、愤怒及危机中的自我调节，只采用可重复的行为模式。" },
+  { title: "大臣与近侍", text: "观察任人、授权、纳谏、奖惩和改错方式，这是君王资料中通常最有信息量的一组证据。" },
+  { title: "伴侣与后妃", text: "观察合作、偏爱、冲突、继承干预和丧偶反应，并警惕宫廷叙事与胜朝污名。" },
+  { title: "父母与宗族", text: "区分礼制规定与自发行为，重点看亲族利益和国家规则冲突时的选择。" },
+  { title: "藩属与外部政权", text: "按时代分别理解封国、联盟、册封、朝贡与外交，观察战争、自治、联姻和文化接纳。" },
+] as const;
+
 const eras: Era[] = [
   {
     id: "xia",
@@ -417,8 +432,11 @@ function RulerTeaser({
       </span>
       <span className="ruler-teaser-copy">
         <span className="ruler-dynasty">{ruler.polity} · {ruler.reign}</span>
-        <span className={`mbti-mini${ruler.mbti.code === "待考" ? " withheld" : ""}`} aria-label={`MBTI 趣味推演：${ruler.mbti.code}`}>
-          {ruler.mbti.code}
+        <span
+          className={`mbti-mini${ruler.psychology.confidence === "low" ? " low-confidence" : ""}`}
+          aria-label={`MBTI 行为推演：${ruler.psychology.code}，${ruler.psychology.confidenceLabel}`}
+        >
+          {ruler.psychology.code}{ruler.psychology.confidence === "low" ? <sup aria-hidden="true">?</sup> : null}
         </span>
         <strong>{ruler.name}</strong>
         <em>{ruler.personalName} · {ruler.title}</em>
@@ -626,7 +644,7 @@ export default function Home() {
         <p className="eyebrow">从夏商周到帝制终章</p>
         <h1 id="page-title">沿着时间，横向展开中国古代史</h1>
         <p className="hero-copy">
-          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。展开大事记，也可以进入君王档案馆，检索当前时间轴收录的全部 {catalogStats.total} 位在位君主。
+          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。展开大事记，也可以进入君王档案馆，查看全部 {catalogStats.total} 位在位君主的关系行为与 MBTI 候选分析。
         </p>
         <button className="archive-entry" type="button" onClick={() => showRulerDirectory()}>
           <span>君王档案馆</span>
@@ -637,6 +655,7 @@ export default function Home() {
           <span>滚轮浏览</span>
           <span>左右键切换</span>
           <span>卡片点击展开</span>
+          <span>{catalogStats.mbtiInferred} 份 MBTI 候选</span>
           <span>{catalogStats.withPortrait} 幅已核验画像</span>
         </div>
       </section>
@@ -751,7 +770,7 @@ export default function Home() {
                       <span>人物切面</span>
                       <h3 id={`rulers-${era.id}`}>代表君王 · 本期收录 {rulersByEra[era.id].length} 位</h3>
                     </div>
-                    <small>点击人物，打开身份与性格档案</small>
+                    <small>点击人物，查看关系行为与 MBTI 依据</small>
                   </div>
                   <div className="ruler-grid">
                     {(featuredRulersByEra[era.id] ?? []).map((ruler) => (
@@ -802,9 +821,54 @@ export default function Home() {
             <h2 id="ruler-directory-title">君王档案馆</h2>
           </div>
           <p>
-            当前口径收录 {catalogStats.total} 位实际在位君主。复位者只计一人；短期、被废与并立君主保留；秦以前及部分割据政权按史实称“王”或“君主”。
+            当前口径收录 {catalogStats.total} 位实际在位君主。每人都有关系行为视角下的 MBTI 候选与置信度；复位者只计一人，短期、被废与并立君主保留。
           </p>
         </div>
+
+        <details className="methodology-card">
+          <summary>
+            <div>
+              <span>HOW THE TYPE IS INFERRED</span>
+              <strong>这些 MBTI 候选是怎么判的？</strong>
+            </div>
+            <em>展开九项标准</em>
+          </summary>
+          <div className="methodology-body">
+            <section>
+              <div className="methodology-title">
+                <h3>四个偏好维度</h3>
+                <span>政治角色不自动等于人格偏好</span>
+              </div>
+              <div className="methodology-dimensions">
+                {mbtiCriteria.map((criterion) => (
+                  <article key={criterion.key}>
+                    <b>{criterion.key}</b>
+                    <h4>{criterion.title}</h4>
+                    <p>{criterion.text}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <section>
+              <div className="methodology-title">
+                <h3>五类关系证据</h3>
+                <span>只补充判断，不用一段轶事直接定型</span>
+              </div>
+              <div className="methodology-relations">
+                {relationshipCriteria.map((criterion, index) => (
+                  <article key={criterion.title}>
+                    <b>{String(index + 1).padStart(2, "0")}</b>
+                    <div><h4>{criterion.title}</h4><p>{criterion.text}</p></div>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <p className="methodology-caution">
+              <strong>置信度规则：</strong>只有跨时期、跨场景且能归因于本人的材料才进入“中等置信”；幼主、傀儡、短祚或仅存名号者统一标为带问号的低置信候选，其中仅能依据继承位置观察者会注明“结构代理”。史料沉默不代表人物缺少相应情感，类型也不是本人自测结果、学术定论或心理诊断。
+              <a href="https://www.myersbriggs.org/my-mbti-personality-type/the-mbti-preferences/" target="_blank" rel="noreferrer">查看 MBTI 四维定义</a>
+            </p>
+          </div>
+        </details>
 
         <div className="directory-controls">
           <label className="directory-search">
@@ -877,7 +941,7 @@ export default function Home() {
         <aside className="archive-note">
           <strong>资料说明</strong>
           <p>
-            有可靠公版来源的画像会显示图像与出处；其余人物明确标注“暂无可靠传世画像”。MBTI 只对现有行为材料足以支持推演的人物展示，史料不足者标记“待考”，不会用随机类型补齐。
+            有可靠公版来源的画像会显示图像与出处；其余人物明确标注“暂无可靠传世画像”。MBTI 现已覆盖全部人物，其中中等置信 {catalogStats.mbtiMedium} 位、低置信候选 {catalogStats.mbtiLow} 位（含 {catalogStats.mbtiStructural} 位结构代理），并逐项标明情绪、君臣、伴侣、宗族与对外关系是否缺少直接记录。
           </p>
         </aside>
       </section>
@@ -934,27 +998,51 @@ export default function Home() {
               <section className="mbti-card" aria-labelledby="mbti-title">
                 <div className="mbti-heading">
                   <div>
-                    <span>MBTI · 趣味推演</span>
-                    <h3 id="mbti-title">{selectedRuler.mbti.label}</h3>
+                    <span>MBTI · 关系行为推演</span>
+                    <h3 id="mbti-title">{selectedRuler.psychology.label}</h3>
                   </div>
-                  <strong>{selectedRuler.mbti.code}</strong>
+                  <div className="mbti-verdict">
+                    <strong>{selectedRuler.psychology.code}{selectedRuler.psychology.confidence === "low" ? <sup aria-hidden="true">?</sup> : null}</strong>
+                    <em className={selectedRuler.psychology.confidence === "medium" ? "medium" : "low"}>
+                      {selectedRuler.psychology.confidenceLabel}
+                    </em>
+                  </div>
                 </div>
-                <p className="mbti-summary">{selectedRuler.mbti.summary}</p>
-                {selectedRuler.mbti.dimensions.length ? (
-                  <div className="mbti-dimensions">
-                    {selectedRuler.mbti.dimensions.map((dimension) => (
-                      <div key={dimension.letter}>
-                        <b>{dimension.letter}</b>
-                        <span>{dimension.name}</span>
-                        <p>{dimension.evidence}</p>
+                <p className="mbti-summary">{selectedRuler.psychology.summary}</p>
+                <p className="mbti-basis"><b>核心依据</b>{selectedRuler.psychology.basis}</p>
+                <div className="mbti-dimensions">
+                  {selectedRuler.psychology.dimensions.map((dimension) => (
+                    <div key={dimension.letter}>
+                      <b>{dimension.letter}</b>
+                      <span>{dimension.name}</span>
+                      <p>{dimension.evidence}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="relationship-heading">
+                  <h3>关系行为观察</h3>
+                  <span>五项辅助判定标准</span>
+                </div>
+                <div className="relationship-grid">
+                  {selectedRuler.psychology.relationships.map((relationship) => (
+                    <article key={relationship.key}>
+                      <div>
+                        <h4>{relationship.label}</h4>
+                        <span className={`evidence-${relationship.evidenceLevel}`}>
+                          {relationship.evidenceLevel === "documented"
+                            ? "多项材料"
+                            : relationship.evidenceLevel === "limited"
+                              ? "有具体线索"
+                              : "缺少直接记录"}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mbti-withheld">现存材料不足以分别论证四个维度，因此暂不推测类型。</p>
-                )}
+                      <p>{relationship.text}</p>
+                    </article>
+                  ))}
+                </div>
                 <small>
-                  历史人物无法完成现代标准化问卷；此类型仅把史料中的行为、决策与兴趣映射到 MBTI 维度，不是学术定论或心理诊断。
+                  历史人物无法完成现代标准化问卷；本页把政治行为、兴趣与关系记录映射到 MBTI 偏好。关系材料缺载时只降低置信度，不把名分、婚姻或政令自动当成私人情感。
                 </small>
               </section>
 
@@ -990,7 +1078,7 @@ export default function Home() {
 
       <footer>
         <p>历史并非一条笔直的线，而是制度、战争、财政、人物与环境交织而成的长卷。</p>
-        <span>MBTI 为基于史料行为与兴趣的趣味推演；古代画像不等同于真实照片</span>
+        <span>MBTI 为基于史料行为、兴趣与关系的候选推演；古代画像不等同于真实照片</span>
       </footer>
     </main>
   );

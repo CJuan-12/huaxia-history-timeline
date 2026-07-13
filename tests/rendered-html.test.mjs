@@ -31,7 +31,7 @@ test("server-renders the history timeline and featured rulers", async () => {
   assert.match(readableHtml, /全部 443 位/);
   assert.match(readableHtml, /找到 443 位/);
   assert.match(readableHtml, /暂无可靠传世画像/);
-  assert.match(readableHtml, /MBTI 为基于史料行为与兴趣的趣味推演/);
+  assert.match(readableHtml, /MBTI 为基于史料行为、兴趣与关系的候选推演/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
 });
 
@@ -49,10 +49,35 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(page, /aria-haspopup="dialog"/);
   assert.match(page, /onCancel=/);
   assert.match(page, /非心理诊断/);
+  assert.match(page, /展开九项标准/);
+  assert.match(page, /关系行为观察/);
+  assert.match(page, /五项辅助判定标准/);
+  assert.match(page, /结构代理/);
+  assert.match(page, /<sup aria-hidden="true">\?<\/sup>/);
+
+  const mbtiCriteriaBlock = page.match(/const mbtiCriteria = \[([\s\S]*?)\] as const;/)?.[1] ?? "";
+  const relationshipCriteriaBlock = page.match(/const relationshipCriteria = \[([\s\S]*?)\] as const;/)?.[1] ?? "";
+  assert.equal([...mbtiCriteriaBlock.matchAll(/\{ key: /g)].length, 4);
+  assert.equal([...relationshipCriteriaBlock.matchAll(/\{ title: /g)].length, 5);
+  for (const criterion of [
+    "互动取向",
+    "信息取向",
+    "权衡取向",
+    "行动取向",
+    "个人情感",
+    "大臣与近侍",
+    "伴侣与后妃",
+    "父母与宗族",
+    "藩属与外部政权",
+  ]) {
+    assert.match(page, new RegExp(criterion));
+  }
+
   assert.match(profiles, /宫廷画像|传世画像|后世绘像/);
   assert.match(profiles, /code: "(?:ENTJ|ISTJ|ESTJ|ENFJ|INTJ|ENTP|ESTP|INFJ)"/);
   assert.match(profiles, /Wikimedia Commons 公版/);
-  assert.match(catalog, /code: "待考"/);
+  assert.doesNotMatch(catalog, /code: "待考"/);
+  assert.match(catalog, /psychology: PsychologyAssessment/);
   assert.match(catalog, /kind: "暂无可靠传世画像"/);
   assert.match(catalog, /未采用现代想象图/);
   assert.match(layout, /443 位君主身份档案/);
@@ -114,6 +139,53 @@ test("catalogues every ruler in the 23-part timeline without duplicate restorati
   assert.match(catalog, /唐中宗李显": "684年；705—710年（两度在位）"/);
   assert.match(catalog, /图帖睦尔": "1328—1329年；1329—1332年（两度在位）"/);
   assert.match(catalog, /朱祁镇": "1435—1449年；1457—1464年（两度在位）"/);
+});
+
+test("assigns every catalogued ruler one evidence-ranked MBTI candidate", async () => {
+  const [catalog, early, late, psychology] = await Promise.all([
+    readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-psychology-early.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-psychology-late.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-psychology.ts", import.meta.url), "utf8"),
+  ]);
+
+  const groups = [...catalog.matchAll(/\{ eraId: "([^"]+)", polity: "([^"]+)", rulers: "([^"]+)" \}/g)]
+    .map(([, eraId, , rulers]) => ({ eraId, rulers: rulers.split("|") }));
+  const expectedKeys = groups.flatMap((group) => group.rulers.map((name) => `${group.eraId}:${name}`));
+
+  function parseEntries(source, sourceName) {
+    const declaredKeys = [...source.matchAll(/^\s*"([^"]+)":\s*(?:profile|r)\(/gm)].map((match) => match[1]);
+    const entries = [...source.matchAll(
+      /^\s*"([^"]+)":\s*(?:profile|r)\(\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"\s*,\s*"([^"]*)"/gm,
+    )].map(([, key, code, confidence, archetype, basis]) => ({ key, code, confidence, archetype, basis }));
+
+    assert.equal(entries.length, declaredKeys.length, `${sourceName} 中每个条目都应包含可解析的 code、confidence、archetype 与 basis`);
+    for (const entry of entries) {
+      assert.match(entry.code, /^[EI][NS][TF][JP]$/, `${entry.key} 的 MBTI code 不合法`);
+      assert.ok(["medium", "low"].includes(entry.confidence), `${entry.key} 的 confidence 不合法`);
+      assert.ok(entry.basis.trim().length > 0, `${entry.key} 的 basis 不能为空`);
+    }
+    return entries;
+  }
+
+  const entries = [
+    ...parseEntries(early, "ruler-psychology-early.ts"),
+    ...parseEntries(late, "ruler-psychology-late.ts"),
+  ];
+  const entryCounts = new Map();
+  for (const entry of entries) {
+    entryCounts.set(entry.key, (entryCounts.get(entry.key) ?? 0) + 1);
+  }
+
+  assert.equal(expectedKeys.length, 443);
+  assert.equal(new Set(expectedKeys).size, 443);
+  assert.equal(entries.length, 443);
+  assert.deepEqual([...entryCounts.keys()].sort(), [...expectedKeys].sort());
+  assert.ok([...entryCounts.values()].every((count) => count === 1), "每位君王应恰好有一个 MBTI 候选条目");
+  assert.match(psychology, /throw new Error\(`Missing psychology assessment for \$\{context\.key\}`\)/);
+  assert.doesNotMatch(psychology, /fallback/i);
+  assert.match(psychology, /const code = entry\.code/);
+  assert.match(psychology, /typeof relation === "string" \? "limited"/);
 });
 
 test("supports a static GitHub Pages deployment under the repository path", async () => {
