@@ -1,4 +1,5 @@
 import { rulerProfiles, type RulerProfile } from "./ruler-profiles";
+import { additionalRulerPortraits } from "./ruler-portraits";
 import { buildPsychologyAssessment } from "./ruler-psychology";
 import type { PsychologyAssessment } from "./ruler-psychology-types";
 
@@ -173,6 +174,7 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
   const seedKey = `${seed.eraId}:${seed.name}`;
   const curatedId = curatedIdBySeedKey[seedKey];
   const curated = curatedId ? curatedById.get(curatedId) : undefined;
+  const additionalPortrait = additionalRulerPortraits[seedKey];
   const aliases = Array.from(new Set([seed.name, ...(seed.aliases ?? []), ...(curated ? [curated.name, curated.personalName] : [])]));
   const psychology = buildPsychologyAssessment({
     key: seedKey,
@@ -207,7 +209,7 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
     reign: seed.reign ?? "在位纪年待专门史料卡补充",
     lifespan: "生卒年待考",
     identity: `${seed.name}为${seed.polity}在位君主。本卡已完成世系索引，详细生平仍需依据专门史料逐项补充。`,
-    portrait: {
+    portrait: additionalPortrait ?? {
       src: "",
       alt: `${seed.name}暂无可靠传世画像`,
       kind: "暂无可靠传世画像",
@@ -230,7 +232,7 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
     aliases,
     searchText: [seed.name, ...aliases, seed.polity].join(" "),
     evidenceLevel: "index",
-    portraitStatus: "unavailable",
+    portraitStatus: additionalPortrait ? "available" : "unavailable",
     mbtiStatus: "inferred",
     psychology,
   };

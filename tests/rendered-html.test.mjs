@@ -36,9 +36,10 @@ test("server-renders the history timeline and featured rulers", async () => {
 });
 
 test("keeps ruler profiles accessible and portrait assets local", async () => {
-  const [page, profiles, catalog, layout, packageJson, portraits] = await Promise.all([
+  const [page, profiles, portraitCatalog, catalog, layout, packageJson, portraits] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-profiles.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-portraits.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
@@ -85,7 +86,10 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(layout, /images: \[\{ url: `\$\{publicBasePath\}\/og\.png`/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 
-  const referencedPortraits = [...profiles.matchAll(/src: "\/rulers\/([^"/]+)"/g)].map((match) => match[1]);
+  const referencedPortraits = [profiles, portraitCatalog]
+    .flatMap((source) => [...source.matchAll(/src: "\/rulers\/([^"/]+)"/g)].map((match) => match[1]));
+  assert.equal([...portraitCatalog.matchAll(/^  "[^"\n]+": \{/gm)].length, 7);
+  assert.match(portraitCatalog, /Wikimedia Commons 公版/);
   assert.equal(portraits.length, referencedPortraits.length);
   assert.deepEqual([...portraits].sort(), [...referencedPortraits].sort());
   assert.ok(portraits.every((name) => /\.(?:jpe?g|png)$/i.test(name)));
