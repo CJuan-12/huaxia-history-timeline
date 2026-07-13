@@ -20,6 +20,8 @@ import {
   type CatalogRulerProfile,
 } from "./ruler-catalog";
 
+const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 type EventItem = {
   year: string;
   title: string;
@@ -371,7 +373,7 @@ function RulerPortrait({ ruler, large = false }: { ruler: CatalogRulerProfile; l
   if (ruler.portrait.src) {
     return (
       <img
-        src={ruler.portrait.src}
+        src={`${publicBasePath}${ruler.portrait.src}`}
         alt={ruler.portrait.alt}
         width={large ? 520 : 92}
         height={large ? 680 : 118}

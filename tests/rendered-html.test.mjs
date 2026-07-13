@@ -56,7 +56,8 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(catalog, /kind: "暂无可靠传世画像"/);
   assert.match(catalog, /未采用现代想象图/);
   assert.match(layout, /443 位君主身份档案/);
-  assert.match(layout, /images: \[\{ url: "\/og\.png"/);
+  assert.match(layout, /metadataBase: new URL\(publicSiteOrigin\)/);
+  assert.match(layout, /images: \[\{ url: `\$\{publicBasePath\}\/og\.png`/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
 
   const referencedPortraits = [...profiles.matchAll(/src: "\/rulers\/([^"/]+)"/g)].map((match) => match[1]);
@@ -113,4 +114,25 @@ test("catalogues every ruler in the 23-part timeline without duplicate restorati
   assert.match(catalog, /唐中宗李显": "684年；705—710年（两度在位）"/);
   assert.match(catalog, /图帖睦尔": "1328—1329年；1329—1332年（两度在位）"/);
   assert.match(catalog, /朱祁镇": "1435—1449年；1457—1464年（两度在位）"/);
+});
+
+test("supports a static GitHub Pages deployment under the repository path", async () => {
+  const [nextConfig, pagesTsconfig, workflow, packageJson] = await Promise.all([
+    readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
+    readFile(new URL("../tsconfig.pages.json", import.meta.url), "utf8"),
+    readFile(new URL("../.github/workflows/deploy-pages.yml", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(nextConfig, /output: isGitHubPages \? "export" : undefined/);
+  assert.match(nextConfig, /basePath/);
+  assert.match(nextConfig, /tsconfigPath: isGitHubPages \? "tsconfig\.pages\.json"/);
+  assert.doesNotMatch(pagesTsconfig, /db\/\*\*/);
+  assert.match(packageJson, /"build:pages": "next build"/);
+  assert.match(workflow, /actions\/configure-pages@v5/);
+  assert.match(workflow, /actions\/upload-pages-artifact@v4/);
+  assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /NEXT_PUBLIC_BASE_PATH/);
+  assert.match(workflow, /NEXT_PUBLIC_SITE_ORIGIN/);
+  await access(new URL("../public/.nojekyll", import.meta.url));
 });
