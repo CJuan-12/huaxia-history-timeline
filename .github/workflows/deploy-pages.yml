@@ -40,7 +40,9 @@ jobs:
           echo "GITHUB_PAGES=true" >> "$GITHUB_ENV"
 
       - name: Install dependencies
-        run: npm ci
+        # The lockfile is authored on Windows; npm ci rejects Linux-only WASI
+        # fallback entries that npm omits from a cross-platform lock refresh.
+        run: npm install --no-audit --no-fund
 
       - name: Build static site
         run: npm run build:pages
