@@ -41,6 +41,7 @@ body {
 
 button,
 input,
+select,
 summary {
   font: inherit;
 }
@@ -53,6 +54,7 @@ summary {
 button:focus-visible,
 summary:focus-visible,
 input:focus-visible,
+select:focus-visible,
 .timeline-rail:focus-visible,
 a:focus-visible {
   outline: 3px solid var(--focus);
@@ -181,6 +183,32 @@ a:focus-visible {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 28px;
+}
+
+.archive-entry {
+  align-items: center;
+  background: var(--cinnabar);
+  border: 1px solid var(--cinnabar-dark);
+  border-radius: 3px;
+  color: #fff9ee;
+  cursor: pointer;
+  display: inline-flex;
+  gap: 13px;
+  margin-top: 26px;
+  padding: 13px 16px;
+  text-align: left;
+}
+
+.archive-entry span {
+  border-right: 1px solid rgb(255 255 255 / 0.35);
+  font-family: var(--serif);
+  font-size: 16px;
+  padding-right: 13px;
+}
+
+.archive-entry b {
+  font-size: 17px;
+  margin-left: 4px;
 }
 
 .gesture-hints span {
@@ -519,6 +547,32 @@ a:focus-visible {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr));
 }
 
+.era-ruler-more {
+  align-items: center;
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+
+.era-ruler-more p {
+  color: var(--ink-3);
+  font-size: 10px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.era-ruler-more button {
+  background: transparent;
+  border: 0;
+  color: var(--cinnabar);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 0;
+}
+
 .ruler-teaser {
   align-items: stretch;
   background: var(--surface-bright);
@@ -553,6 +607,52 @@ a:focus-visible {
   object-fit: cover;
   object-position: center 14%;
   width: 100%;
+}
+
+.portrait-placeholder {
+  align-items: center;
+  background:
+    radial-gradient(circle at center, rgb(157 51 40 / 0.12), transparent 58%),
+    linear-gradient(135deg, rgb(99 113 102 / 0.12), transparent),
+    var(--paper-deep);
+  color: var(--cinnabar-dark);
+  display: flex;
+  flex-direction: column;
+  height: 118px;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.portrait-placeholder::before,
+.portrait-placeholder::after {
+  border: 1px solid rgb(157 51 40 / 0.24);
+  content: "";
+  inset: 9px;
+  position: absolute;
+}
+
+.portrait-placeholder::after {
+  inset: 13px;
+}
+
+.portrait-placeholder b {
+  font-family: var(--serif);
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1;
+  opacity: 0.82;
+}
+
+.portrait-placeholder small {
+  color: var(--ink-3);
+  font-size: 7px;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  margin-top: 7px;
+  z-index: 1;
 }
 
 .ruler-teaser-portrait small {
@@ -596,6 +696,32 @@ a:focus-visible {
   position: absolute;
   right: 12px;
   top: 12px;
+}
+
+.mbti-mini.withheld {
+  background: var(--ink-3);
+}
+
+.ruler-teaser-compact {
+  grid-template-columns: 82px minmax(0, 1fr);
+  min-height: 126px;
+}
+
+.ruler-teaser-compact .ruler-teaser-portrait {
+  grid-template-rows: 100px 1fr;
+}
+
+.ruler-teaser-compact .ruler-teaser-portrait img,
+.ruler-teaser-compact .portrait-placeholder {
+  height: 100px;
+}
+
+.ruler-teaser-compact .ruler-teaser-copy strong {
+  font-size: 18px;
+}
+
+.ruler-teaser-compact .ruler-open-label {
+  padding-top: 7px;
 }
 
 .ruler-teaser-copy strong {
@@ -754,6 +880,168 @@ a:focus-visible {
   margin: 0;
 }
 
+.ruler-directory {
+  margin: 0 auto;
+  max-width: 1440px;
+  padding: clamp(70px, 9vw, 124px) clamp(24px, 6vw, 84px) 82px;
+  scroll-margin-top: 72px;
+}
+
+.directory-heading {
+  align-items: end;
+  border-bottom: 1px solid var(--rule-strong);
+  display: grid;
+  gap: clamp(30px, 7vw, 110px);
+  grid-template-columns: minmax(250px, 0.78fr) minmax(300px, 1.22fr);
+  padding-bottom: 28px;
+}
+
+.directory-heading > div > p {
+  color: var(--cinnabar);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  margin: 0 0 8px;
+}
+
+.directory-heading h2 {
+  font-family: var(--serif);
+  font-size: clamp(36px, 5vw, 62px);
+  line-height: 1;
+  margin: 0;
+}
+
+.directory-heading > p {
+  color: var(--ink-2);
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.directory-controls {
+  align-items: end;
+  background: rgb(232 224 207 / 0.45);
+  border: 1px solid var(--rule);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(260px, 1.5fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr);
+  margin-top: 26px;
+  padding: 16px;
+}
+
+.directory-controls label {
+  display: grid;
+  gap: 7px;
+}
+
+.directory-controls label > span {
+  color: var(--ink-3);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+.directory-controls input,
+.directory-controls select {
+  background: var(--surface-bright);
+  border: 1px solid var(--rule-strong);
+  border-radius: 2px;
+  color: var(--ink);
+  height: 44px;
+  min-width: 0;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.directory-controls select:disabled {
+  color: var(--ink-3);
+  opacity: 0.72;
+}
+
+.directory-status {
+  align-items: baseline;
+  display: flex;
+  justify-content: space-between;
+  margin: 22px 0 13px;
+}
+
+.directory-status strong {
+  font-family: var(--serif);
+  font-size: 20px;
+}
+
+.directory-status span {
+  color: var(--ink-3);
+  font-size: 10px;
+}
+
+.directory-grid {
+  display: grid;
+  gap: 11px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.directory-more {
+  background: transparent;
+  border: 1px solid var(--cinnabar);
+  border-radius: 2px;
+  color: var(--cinnabar);
+  cursor: pointer;
+  display: block;
+  font-weight: 700;
+  margin: 24px auto 0;
+  padding: 12px 20px;
+}
+
+.directory-more span {
+  color: var(--ink-3);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.directory-empty {
+  border: 1px dashed var(--rule-strong);
+  color: var(--ink-2);
+  margin-top: 13px;
+  padding: 50px 24px;
+  text-align: center;
+}
+
+.directory-empty strong {
+  color: var(--ink);
+  font-family: var(--serif);
+  font-size: 22px;
+}
+
+.directory-empty p {
+  font-size: 12px;
+  margin: 10px 0 0;
+}
+
+.archive-note {
+  border-top: 1px solid var(--rule);
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 90px minmax(0, 1fr);
+  margin-top: 30px;
+  padding-top: 19px;
+}
+
+.archive-note strong {
+  color: var(--cinnabar);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+
+.archive-note p {
+  color: var(--ink-3);
+  font-size: 10px;
+  line-height: 1.75;
+  margin: 0;
+  max-width: 80em;
+}
+
 .ruler-dialog {
   background: transparent;
   border: 0;
@@ -829,6 +1117,19 @@ a:focus-visible {
   width: 100%;
 }
 
+.portrait-placeholder-large {
+  height: min(61dvh, 570px);
+}
+
+.portrait-placeholder-large b {
+  font-size: clamp(72px, 10vw, 128px);
+}
+
+.portrait-placeholder-large small {
+  font-size: 11px;
+  margin-top: 18px;
+}
+
 .ruler-portrait-large figcaption {
   display: grid;
   gap: 6px;
@@ -848,6 +1149,12 @@ a:focus-visible {
   line-height: 1.5;
   text-decoration-color: var(--rule-strong);
   text-underline-offset: 3px;
+}
+
+.ruler-portrait-large figcaption small {
+  color: var(--ink-3);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 .ruler-profile {
@@ -1027,6 +1334,16 @@ a:focus-visible {
   padding-top: 11px;
 }
 
+.mbti-withheld {
+  background: rgb(124 117 105 / 0.08);
+  border: 1px dashed var(--rule-strong);
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 14px 0 0;
+  padding: 12px;
+}
+
 .personality-card {
   background: rgb(232 224 207 / 0.5);
   border-left: 3px solid var(--cinnabar);
@@ -1159,6 +1476,10 @@ footer span {
   .track-node::after {
     width: calc(90vw + 24px);
   }
+
+  .directory-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -1192,6 +1513,12 @@ footer span {
 
   .hero h1 {
     font-size: clamp(36px, 12vw, 54px);
+  }
+
+  .archive-entry {
+    align-items: flex-start;
+    display: flex;
+    flex-wrap: wrap;
   }
 
   .timeline-controls {
@@ -1259,6 +1586,11 @@ footer span {
     gap: 6px;
   }
 
+  .era-ruler-more {
+    align-items: flex-start;
+    display: grid;
+  }
+
   .ruler-grid {
     grid-template-columns: 1fr;
   }
@@ -1269,6 +1601,27 @@ footer span {
 
   .ruler-teaser-copy {
     padding-inline: 13px;
+  }
+
+  .ruler-directory {
+    padding: 66px 20px 60px;
+  }
+
+  .directory-heading,
+  .directory-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .directory-heading {
+    gap: 22px;
+  }
+
+  .directory-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-note {
+    grid-template-columns: 1fr;
   }
 
   .ruler-dialog {
@@ -1295,6 +1648,10 @@ footer span {
   }
 
   .ruler-portrait-large img {
+    height: 270px;
+  }
+
+  .portrait-placeholder-large {
     height: 270px;
   }
 

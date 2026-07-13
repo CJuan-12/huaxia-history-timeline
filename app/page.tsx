@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- local historical portraits preserve original aspect ratios in this static archive */
 
 import {
   useCallback,
@@ -10,7 +11,14 @@ import {
   type PointerEvent,
   type WheelEvent,
 } from "react";
-import { rulersByEra, type RulerProfile } from "./ruler-profiles";
+import {
+  allRulerProfiles,
+  catalogStats,
+  featuredRulersByEra,
+  politiesForEra,
+  rulersByEra,
+  type CatalogRulerProfile,
+} from "./ruler-catalog";
 
 type EventItem = {
   year: string;
@@ -359,6 +367,70 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
+function RulerPortrait({ ruler, large = false }: { ruler: CatalogRulerProfile; large?: boolean }) {
+  if (ruler.portrait.src) {
+    return (
+      <img
+        src={ruler.portrait.src}
+        alt={ruler.portrait.alt}
+        width={large ? 520 : 92}
+        height={large ? 680 : 118}
+        loading={large ? "eager" : "lazy"}
+        decoding="async"
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`portrait-placeholder${large ? " portrait-placeholder-large" : ""}`}
+      role="img"
+      aria-label={`${ruler.name}暂无可确认的传世画像`}
+    >
+      <b aria-hidden="true">{ruler.name.slice(0, 1)}</b>
+      <small>暂无可靠<br />传世画像</small>
+    </span>
+  );
+}
+
+function RulerTeaser({
+  ruler,
+  onOpen,
+  compact = false,
+}: {
+  ruler: CatalogRulerProfile;
+  onOpen: (ruler: CatalogRulerProfile, opener: HTMLButtonElement) => void;
+  compact?: boolean;
+}) {
+  return (
+    <button
+      className={`ruler-teaser${compact ? " ruler-teaser-compact" : ""}`}
+      type="button"
+      aria-haspopup="dialog"
+      onClick={(event) => onOpen(ruler, event.currentTarget)}
+    >
+      <span className="ruler-teaser-portrait">
+        <RulerPortrait ruler={ruler} />
+        <small>{ruler.portrait.kind}</small>
+      </span>
+      <span className="ruler-teaser-copy">
+        <span className="ruler-dynasty">{ruler.polity} · {ruler.reign}</span>
+        <span className={`mbti-mini${ruler.mbti.code === "待考" ? " withheld" : ""}`} aria-label={`MBTI 趣味推演：${ruler.mbti.code}`}>
+          {ruler.mbti.code}
+        </span>
+        <strong>{ruler.name}</strong>
+        <em>{ruler.personalName} · {ruler.title}</em>
+        {!compact ? (
+          <span className="trait-list" aria-label="性格标签">
+            {ruler.traits.map((trait) => <i key={trait}>{trait}</i>)}
+          </span>
+        ) : null}
+        <span className="ruler-open-label">查看身份卡 →</span>
+      </span>
+    </button>
+  );
+}
+
 export default function Home() {
   const railRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -368,9 +440,25 @@ export default function Home() {
   const [current, setCurrent] = useState(0);
   const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const [selectedRuler, setSelectedRuler] = useState<RulerProfile | null>(null);
+  const directoryRef = useRef<HTMLElement>(null);
+  const [selectedRuler, setSelectedRuler] = useState<CatalogRulerProfile | null>(null);
+  const [rulerQuery, setRulerQuery] = useState("");
+  const [rulerEra, setRulerEra] = useState("all");
+  const [rulerPolity, setRulerPolity] = useState("all");
+  const [visibleRulerCount, setVisibleRulerCount] = useState(18);
 
   const currentEra = eras[current];
+
+  const directoryPolities = rulerEra === "all" ? [] : (politiesForEra[rulerEra] ?? []);
+  const filteredRulers = useMemo(() => {
+    const normalizedQuery = rulerQuery.trim().toLocaleLowerCase("zh-CN");
+    return allRulerProfiles.filter((ruler) => {
+      if (rulerEra !== "all" && ruler.eraId !== rulerEra) return false;
+      if (rulerPolity !== "all" && ruler.polity !== rulerPolity) return false;
+      if (!normalizedQuery) return true;
+      return ruler.searchText.toLocaleLowerCase("zh-CN").includes(normalizedQuery);
+    });
+  }, [rulerEra, rulerPolity, rulerQuery]);
 
   const updateFromScroll = useCallback(() => {
     const rail = railRef.current;
@@ -467,9 +555,19 @@ export default function Home() {
     }
   };
 
-  const openRuler = (ruler: RulerProfile, opener: HTMLButtonElement) => {
+  const openRuler = (ruler: CatalogRulerProfile, opener: HTMLButtonElement) => {
     rulerOpenerRef.current = opener;
     setSelectedRuler(ruler);
+  };
+
+  const showRulerDirectory = (eraId = "all") => {
+    setRulerEra(eraId);
+    setRulerPolity("all");
+    setRulerQuery("");
+    setVisibleRulerCount(18);
+    requestAnimationFrame(() => {
+      directoryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const closeRuler = () => {
@@ -526,14 +624,18 @@ export default function Home() {
         <p className="eyebrow">从夏商周到帝制终章</p>
         <h1 id="page-title">沿着时间，横向展开中国古代史</h1>
         <p className="hero-copy">
-          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。展开大事记，也可以点击代表君王查看身份与性格档案。
+          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。展开大事记，也可以进入君王档案馆，检索当前时间轴收录的全部 {catalogStats.total} 位在位君主。
         </p>
+        <button className="archive-entry" type="button" onClick={() => showRulerDirectory()}>
+          <span>君王档案馆</span>
+          搜索全部 {catalogStats.total} 位君主 <b aria-hidden="true">↓</b>
+        </button>
         <div className="gesture-hints" aria-label="操作提示">
           <span>拖拽横移</span>
           <span>滚轮浏览</span>
           <span>左右键切换</span>
           <span>卡片点击展开</span>
-          <span>君王档案</span>
+          <span>{catalogStats.withPortrait} 幅已核验画像</span>
         </div>
       </section>
 
@@ -645,44 +747,23 @@ export default function Home() {
                   <div className="ruler-section-heading">
                     <div>
                       <span>人物切面</span>
-                      <h3 id={`rulers-${era.id}`}>代表君王</h3>
+                      <h3 id={`rulers-${era.id}`}>代表君王 · 本期收录 {rulersByEra[era.id].length} 位</h3>
                     </div>
                     <small>点击人物，打开身份与性格档案</small>
                   </div>
                   <div className="ruler-grid">
-                    {rulersByEra[era.id].map((ruler) => (
-                      <button
-                        className="ruler-teaser"
-                        type="button"
-                        key={ruler.id}
-                        aria-haspopup="dialog"
-                        onClick={(event) => openRuler(ruler, event.currentTarget)}
-                      >
-                        <span className="ruler-teaser-portrait">
-                          <img
-                            src={ruler.portrait.src}
-                            alt={ruler.portrait.alt}
-                            width="92"
-                            height="118"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                          <small>{ruler.portrait.kind}</small>
-                        </span>
-                        <span className="ruler-teaser-copy">
-                          <span className="ruler-dynasty">{ruler.dynasty} · {ruler.reign}</span>
-                          <span className="mbti-mini" aria-label={`MBTI 趣味推演：${ruler.mbti.code}`}>
-                            {ruler.mbti.code}
-                          </span>
-                          <strong>{ruler.name}</strong>
-                          <em>{ruler.personalName} · {ruler.title}</em>
-                          <span className="trait-list" aria-label="性格标签">
-                            {ruler.traits.map((trait) => <i key={trait}>{trait}</i>)}
-                          </span>
-                          <span className="ruler-open-label">查看完整档案 →</span>
-                        </span>
-                      </button>
+                    {(featuredRulersByEra[era.id] ?? []).map((ruler) => (
+                      <RulerTeaser key={ruler.id} ruler={ruler} onOpen={openRuler} />
                     ))}
+                  </div>
+                  <div className="era-ruler-more">
+                    <p>
+                      其余君主：{rulersByEra[era.id].filter((ruler) => !(featuredRulersByEra[era.id] ?? []).some((featured) => featured.id === ruler.id)).slice(0, 6).map((ruler) => ruler.name).join("、")}
+                      {rulersByEra[era.id].length > 8 ? "等" : ""}
+                    </p>
+                    <button type="button" onClick={() => showRulerDirectory(era.id)}>
+                      查看本期全部 {rulersByEra[era.id].length} 位 →
+                    </button>
                   </div>
                 </section>
               ) : null}
@@ -712,6 +793,93 @@ export default function Home() {
         </div>
       </section>
 
+      <section ref={directoryRef} id="ruler-directory" className="ruler-directory" aria-labelledby="ruler-directory-title">
+        <div className="directory-heading">
+          <div>
+            <p>THE RULER ARCHIVE</p>
+            <h2 id="ruler-directory-title">君王档案馆</h2>
+          </div>
+          <p>
+            当前口径收录 {catalogStats.total} 位实际在位君主。复位者只计一人；短期、被废与并立君主保留；秦以前及部分割据政权按史实称“王”或“君主”。
+          </p>
+        </div>
+
+        <div className="directory-controls">
+          <label className="directory-search">
+            <span>搜索姓名、帝号或别名</span>
+            <input
+              type="search"
+              value={rulerQuery}
+              onChange={(event) => {
+                setRulerQuery(event.target.value);
+                setVisibleRulerCount(18);
+              }}
+              placeholder="例如：刘彻、唐太宗、康熙"
+            />
+          </label>
+          <label>
+            <span>历史时期</span>
+            <select
+              value={rulerEra}
+              onChange={(event) => {
+                setRulerEra(event.target.value);
+                setRulerPolity("all");
+                setVisibleRulerCount(18);
+              }}
+            >
+              <option value="all">全部 23 个时期</option>
+              {eras.map((era) => <option key={era.id} value={era.id}>{era.name} · {rulersByEra[era.id]?.length ?? 0} 位</option>)}
+            </select>
+          </label>
+          <label>
+            <span>具体政权</span>
+            <select
+              value={rulerPolity}
+              onChange={(event) => {
+                setRulerPolity(event.target.value);
+                setVisibleRulerCount(18);
+              }}
+              disabled={directoryPolities.length < 2}
+            >
+              <option value="all">{directoryPolities.length < 2 ? "无需细分" : "全部政权"}</option>
+              {directoryPolities.map((polity) => <option key={polity} value={polity}>{polity}</option>)}
+            </select>
+          </label>
+        </div>
+
+        <div className="directory-status" aria-live="polite">
+          <strong>找到 {filteredRulers.length} 位</strong>
+          <span>已显示 {Math.min(visibleRulerCount, filteredRulers.length)} 位</span>
+        </div>
+
+        {filteredRulers.length ? (
+          <>
+            <div className="directory-grid">
+              {filteredRulers.slice(0, visibleRulerCount).map((ruler) => (
+                <RulerTeaser key={ruler.id} ruler={ruler} onOpen={openRuler} compact />
+              ))}
+            </div>
+            {visibleRulerCount < filteredRulers.length ? (
+              <button className="directory-more" type="button" onClick={() => setVisibleRulerCount((count) => count + 18)}>
+                继续显示 18 位 <span>（尚有 {filteredRulers.length - visibleRulerCount} 位）</span>
+              </button>
+            ) : null}
+          </>
+        ) : (
+          <div className="directory-empty">
+            <strong>没有找到匹配人物</strong>
+            <p>可以尝试姓名、庙号、年号，或清除朝代与政权筛选。</p>
+          </div>
+        )}
+
+        <aside className="archive-note">
+          <strong>资料说明</strong>
+          <p>
+            有可靠公版来源的画像会显示图像与出处；其余人物明确标注“暂无可靠传世画像”。MBTI 只对现有行为材料足以支持推演的人物展示，史料不足者标记“待考”，不会用随机类型补齐。
+          </p>
+        </aside>
+      </section>
+
       <dialog
         ref={dialogRef}
         className="ruler-dialog"
@@ -734,17 +902,14 @@ export default function Home() {
             </button>
 
             <figure className="ruler-portrait-large">
-              <img
-                src={selectedRuler.portrait.src}
-                alt={selectedRuler.portrait.alt}
-                width="520"
-                height="680"
-              />
+              <RulerPortrait ruler={selectedRuler} large />
               <figcaption>
                 <span>{selectedRuler.portrait.kind}</span>
-                <a href={selectedRuler.portrait.sourceUrl} target="_blank" rel="noreferrer">
-                  {selectedRuler.portrait.credit}
-                </a>
+                {selectedRuler.portrait.sourceUrl ? (
+                  <a href={selectedRuler.portrait.sourceUrl} target="_blank" rel="noreferrer">
+                    {selectedRuler.portrait.credit}
+                  </a>
+                ) : <small>{selectedRuler.portrait.credit}</small>}
               </figcaption>
             </figure>
 
@@ -773,15 +938,19 @@ export default function Home() {
                   <strong>{selectedRuler.mbti.code}</strong>
                 </div>
                 <p className="mbti-summary">{selectedRuler.mbti.summary}</p>
-                <div className="mbti-dimensions">
-                  {selectedRuler.mbti.dimensions.map((dimension) => (
-                    <div key={dimension.letter}>
-                      <b>{dimension.letter}</b>
-                      <span>{dimension.name}</span>
-                      <p>{dimension.evidence}</p>
-                    </div>
-                  ))}
-                </div>
+                {selectedRuler.mbti.dimensions.length ? (
+                  <div className="mbti-dimensions">
+                    {selectedRuler.mbti.dimensions.map((dimension) => (
+                      <div key={dimension.letter}>
+                        <b>{dimension.letter}</b>
+                        <span>{dimension.name}</span>
+                        <p>{dimension.evidence}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mbti-withheld">现存材料不足以分别论证四个维度，因此暂不推测类型。</p>
+                )}
                 <small>
                   历史人物无法完成现代标准化问卷；此类型仅把史料中的行为、决策与兴趣映射到 MBTI 维度，不是学术定论或心理诊断。
                 </small>

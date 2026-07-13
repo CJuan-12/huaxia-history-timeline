@@ -9,11 +9,11 @@ export type RulerProfile = {
   lifespan: string;
   identity: string;
   portrait: {
-    src: string;
+    src?: string;
     alt: string;
-    kind: "宫廷画像" | "传世画像" | "后世绘像";
+    kind: "宫廷画像" | "传世画像" | "后世绘像" | "暂无可靠传世画像";
     credit: string;
-    sourceUrl: string;
+    sourceUrl?: string;
   };
   traits: string[];
   mbti: {
@@ -539,8 +539,3 @@ export const rulerProfiles: RulerProfile[] = [
     assessment: "他是有改革意愿却缺乏权力资源的悲剧性君主，其经历集中体现了晚清制度转型的阻力。",
   },
 ];
-
-export const rulersByEra = rulerProfiles.reduce<Record<string, RulerProfile[]>>((groups, ruler) => {
-  (groups[ruler.eraId] ??= []).push(ruler);
-  return groups;
-}, {});
