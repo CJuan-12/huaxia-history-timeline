@@ -19,8 +19,10 @@ import {
   rulersByEra,
   type CatalogRulerProfile,
 } from "./ruler-catalog";
+import { rulerConstellations } from "./ruler-constellations";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const rulerProfileByName = new Map(allRulerProfiles.map((ruler) => [ruler.name, ruler]));
 
 type EventItem = {
   year: string;
@@ -466,8 +468,10 @@ export default function Home() {
   const [rulerEra, setRulerEra] = useState("all");
   const [rulerPolity, setRulerPolity] = useState("all");
   const [visibleRulerCount, setVisibleRulerCount] = useState(18);
+  const [constellationId, setConstellationId] = useState(rulerConstellations[0].id);
 
   const currentEra = eras[current];
+  const activeConstellation = rulerConstellations.find((item) => item.id === constellationId) ?? rulerConstellations[0];
 
   const directoryPolities = rulerEra === "all" ? [] : (politiesForEra[rulerEra] ?? []);
   const filteredRulers = useMemo(() => {
@@ -812,6 +816,120 @@ export default function Home() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="constellation-section" aria-labelledby="constellation-title">
+        <div className="constellation-heading">
+          <div>
+            <p>RULER CONSTELLATIONS</p>
+            <h2 id="constellation-title">帝王关系星谱</h2>
+          </div>
+          <p>
+            把家族、继承、共治与冲突放回同一张关系网。选择一个历史星群，再点击任意君王星点打开完整身份卡。
+          </p>
+        </div>
+
+        <div className="constellation-tabs" role="tablist" aria-label="选择帝王关系星群">
+          {rulerConstellations.map((constellation) => (
+            <button
+              key={constellation.id}
+              id={`constellation-tab-${constellation.id}`}
+              type="button"
+              role="tab"
+              aria-selected={constellation.id === activeConstellation.id}
+              aria-controls="constellation-panel"
+              className={constellation.id === activeConstellation.id ? "active" : ""}
+              onClick={() => setConstellationId(constellation.id)}
+            >
+              <small>{constellation.eyebrow}</small>
+              <strong>{constellation.title}</strong>
+            </button>
+          ))}
+        </div>
+
+        <article
+          id="constellation-panel"
+          className="constellation-panel"
+          role="tabpanel"
+          aria-labelledby={`constellation-tab-${activeConstellation.id}`}
+        >
+          <header className="constellation-panel-heading">
+            <div>
+              <span>{activeConstellation.eyebrow}</span>
+              <h3>{activeConstellation.title}</h3>
+            </div>
+            <time>{activeConstellation.period}</time>
+            <p>{activeConstellation.intro}</p>
+          </header>
+
+          <div className="constellation-legend" aria-label="连线图例">
+            <span><i className="lineage" />血缘与继承</span>
+            <span><i className="partnership" />夫妻与共同执政</span>
+            <span><i className="conflict" />宗族冲突与夺位</span>
+          </div>
+
+          <div className="constellation-viewport" tabIndex={0} aria-label="可横向滚动的帝王关系星谱">
+            <div className="constellation-map">
+              {activeConstellation.edges.map((edge) => {
+                const from = activeConstellation.nodes.find((node) => node.id === edge.from);
+                const to = activeConstellation.nodes.find((node) => node.id === edge.to);
+                if (!from || !to) return null;
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const length = Math.hypot(dx, dy);
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+                return (
+                  <span key={`${edge.from}-${edge.to}-${edge.label}`} aria-hidden="true">
+                    <i
+                      className={`constellation-link ${edge.kind}`}
+                      style={{ left: from.x, top: from.y, width: length, transform: `rotate(${angle}deg)` }}
+                    />
+                    <b
+                      className={`constellation-edge-label ${edge.kind}`}
+                      style={{ left: (from.x + to.x) / 2, top: (from.y + to.y) / 2 + (edge.labelOffset ?? 0) }}
+                    >
+                      {edge.label}
+                    </b>
+                  </span>
+                );
+              })}
+
+              {activeConstellation.nodes.map((node) => {
+                const ruler = rulerProfileByName.get(node.rulerName);
+                if (!ruler) return null;
+                return (
+                  <button
+                    key={node.id}
+                    type="button"
+                    className="constellation-node"
+                    style={{ left: node.x, top: node.y }}
+                    aria-label={`打开${ruler.name}身份卡`}
+                    aria-haspopup="dialog"
+                    onClick={(event) => openRuler(ruler, event.currentTarget)}
+                  >
+                    <span aria-hidden="true">✦</span>
+                    <strong>{node.label}</strong>
+                    <small>{node.years}</small>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <ol className="constellation-relations" aria-label={`${activeConstellation.title}关系说明`}>
+            {activeConstellation.edges.map((edge) => {
+              const from = activeConstellation.nodes.find((node) => node.id === edge.from);
+              const to = activeConstellation.nodes.find((node) => node.id === edge.to);
+              return (
+                <li key={`detail-${edge.from}-${edge.to}-${edge.label}`}>
+                  <span className={edge.kind}>{edge.label}</span>
+                  <strong>{from?.label} → {to?.label}</strong>
+                  <p>{edge.detail}</p>
+                </li>
+              );
+            })}
+          </ol>
+        </article>
       </section>
 
       <section ref={directoryRef} id="ruler-directory" className="ruler-directory" aria-labelledby="ruler-directory-title">

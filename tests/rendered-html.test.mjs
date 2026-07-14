@@ -28,6 +28,8 @@ test("server-renders the history timeline and featured rulers", async () => {
   assert.match(readableHtml, /代表君王/);
   assert.match(readableHtml, /秦始皇/);
   assert.match(readableHtml, /君王档案馆/);
+  assert.match(readableHtml, /帝王关系星谱/);
+  assert.match(readableHtml, /李唐与武周权力星群/);
   assert.match(readableHtml, /全部 443 位/);
   assert.match(readableHtml, /找到 443 位/);
   assert.match(readableHtml, /暂无可靠传世画像/);
@@ -36,17 +38,21 @@ test("server-renders the history timeline and featured rulers", async () => {
 });
 
 test("keeps ruler profiles accessible and portrait assets local", async () => {
-  const [page, profiles, portraitCatalog, catalog, layout, packageJson, portraits] = await Promise.all([
+  const [page, profiles, portraitCatalog, catalog, constellations, layout, packageJson, portraits] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-profiles.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-portraits.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-constellations.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readdir(new URL("../public/rulers/", import.meta.url)),
   ]);
 
   assert.match(page, /<dialog/);
+  assert.match(page, /role="tablist"/);
+  assert.match(page, /className="constellation-node"/);
+  assert.match(page, /onClick=\{\(event\) => openRuler\(ruler, event\.currentTarget\)\}/);
   assert.match(page, /aria-haspopup="dialog"/);
   assert.match(page, /onCancel=/);
   assert.match(page, /非心理诊断/);
@@ -82,6 +88,7 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(catalog, /kind: "暂无可靠传世画像"/);
   assert.match(catalog, /未采用现代想象图/);
   assert.match(layout, /443 位君主身份档案/);
+  assert.match(layout, /帝王关系星谱/);
   assert.match(layout, /metadataBase: new URL\(publicSiteOrigin\)/);
   assert.match(layout, /images: \[\{ url: `\$\{publicBasePath\}\/og\.png`/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
@@ -93,6 +100,16 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.equal(portraits.length, referencedPortraits.length);
   assert.deepEqual([...portraits].sort(), [...referencedPortraits].sort());
   assert.ok(portraits.every((name) => /\.(?:jpe?g|png)$/i.test(name)));
+
+  assert.equal([...constellations.matchAll(/^    id: "(?:early-tang|early-ming|early-qing)",$/gm)].length, 3);
+  assert.equal([...constellations.matchAll(/rulerName: "/g)].length, 19);
+  for (const [, rulerName] of constellations.matchAll(/rulerName: "([^"]+)"/g)) {
+    assert.ok(catalog.includes(rulerName), `${rulerName} 应对应君王档案馆中的真实条目`);
+  }
+  assert.match(constellations, /kind: "lineage"/);
+  assert.match(constellations, /kind: "partnership"/);
+  assert.match(constellations, /kind: "conflict"/);
+  assert.doesNotMatch(page, /<svg/);
 
   await access(new URL("../public/og.png", import.meta.url));
 
