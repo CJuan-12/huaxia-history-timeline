@@ -23,6 +23,7 @@ import { rulerConstellations } from "./ruler-constellations";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const rulerProfileByName = new Map(allRulerProfiles.map((ruler) => [ruler.name, ruler]));
+const constellationCanvas = { scaleX: 1.65, scaleY: 1.35, offsetX: 110, offsetY: 70 } as const;
 
 type EventItem = {
   year: string;
@@ -473,6 +474,12 @@ export default function Home() {
   const [activeSection, setActiveSection] = useState<"timeline" | "constellation" | "archive">("timeline");
   const directoryRef = useRef<HTMLElement>(null);
   const constellationRef = useRef<HTMLElement>(null);
+  const constellationTabsRef = useRef<HTMLDivElement>(null);
+  const constellationTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const constellationTabSettleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const constellationViewportRef = useRef<HTMLDivElement>(null);
+  const constellationDragRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
+  const [constellationDragging, setConstellationDragging] = useState(false);
   const [selectedRuler, setSelectedRuler] = useState<CatalogRulerProfile | null>(null);
   const [rulerQuery, setRulerQuery] = useState("");
   const [rulerEra, setRulerEra] = useState("all");
@@ -571,7 +578,21 @@ export default function Home() {
 
   useEffect(() => () => {
     if (wheelSettleRef.current) clearTimeout(wheelSettleRef.current);
+    if (constellationTabSettleRef.current) clearTimeout(constellationTabSettleRef.current);
   }, []);
+
+  useEffect(() => {
+    const tabs = constellationTabsRef.current;
+    const index = rulerConstellations.findIndex((item) => item.id === constellationId);
+    const tab = constellationTabRefs.current[index];
+    if (tabs && tab) {
+      tabs.scrollTo({
+        left: Math.max(0, tab.offsetLeft - tabs.clientWidth / 2 + tab.offsetWidth / 2),
+        behavior: "auto",
+      });
+    }
+    constellationViewportRef.current?.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+  }, [constellationId]);
 
   const scrollToEra = useCallback((index: number) => {
     const next = clamp(index, 0, eras.length - 1);
@@ -700,6 +721,91 @@ export default function Home() {
   const showTimeline = () => {
     document.getElementById("timeline")?.scrollIntoView({ behavior: "smooth", block: "start" });
     requestAnimationFrame(() => railRef.current?.focus({ preventScroll: true }));
+  };
+
+  const settleConstellationTabs = () => {
+    const tabs = constellationTabsRef.current;
+    if (!tabs) return;
+    const center = tabs.scrollLeft + tabs.clientWidth / 2;
+    let nearest = 0;
+    let distance = Number.POSITIVE_INFINITY;
+    constellationTabRefs.current.forEach((tab, index) => {
+      if (!tab) return;
+      const nextDistance = Math.abs(tab.offsetLeft + tab.offsetWidth / 2 - center);
+      if (nextDistance < distance) {
+        nearest = index;
+        distance = nextDistance;
+      }
+    });
+    const next = rulerConstellations[nearest];
+    if (next && next.id !== constellationId) setConstellationId(next.id);
+  };
+
+  const handleConstellationTabsScroll = () => {
+    if (constellationTabSettleRef.current) clearTimeout(constellationTabSettleRef.current);
+    constellationTabSettleRef.current = setTimeout(settleConstellationTabs, 180);
+  };
+
+  const handleConstellationTabsWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const tabs = constellationTabsRef.current;
+    if (!tabs || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    const maxScroll = tabs.scrollWidth - tabs.clientWidth;
+    const canMove = (event.deltaY < 0 && tabs.scrollLeft > 0) || (event.deltaY > 0 && tabs.scrollLeft < maxScroll);
+    if (!canMove) return;
+    event.preventDefault();
+    const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? tabs.clientWidth : 1;
+    tabs.scrollBy({ left: event.deltaY * unit, behavior: "auto" });
+  };
+
+  const handleConstellationWheel = (event: WheelEvent<HTMLDivElement>) => {
+    const viewport = constellationViewportRef.current;
+    if (!viewport || event.ctrlKey) return;
+    const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? viewport.clientHeight : 1;
+    const deltaX = (event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX) * unit;
+    const deltaY = (event.shiftKey ? 0 : event.deltaY) * unit;
+    const maxX = viewport.scrollWidth - viewport.clientWidth;
+    const maxY = viewport.scrollHeight - viewport.clientHeight;
+    const canMoveX = (deltaX < 0 && viewport.scrollLeft > 0) || (deltaX > 0 && viewport.scrollLeft < maxX);
+    const canMoveY = (deltaY < 0 && viewport.scrollTop > 0) || (deltaY > 0 && viewport.scrollTop < maxY);
+    if (!canMoveX && !canMoveY) return;
+    event.preventDefault();
+    viewport.scrollBy({ left: deltaX, top: deltaY, behavior: "auto" });
+  };
+
+  const handleConstellationPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || (event.target as HTMLElement).closest("button")) return;
+    const viewport = constellationViewportRef.current;
+    if (!viewport) return;
+    constellationDragRef.current = {
+      active: true,
+      startX: event.clientX,
+      startY: event.clientY,
+      scrollLeft: viewport.scrollLeft,
+      scrollTop: viewport.scrollTop,
+    };
+    setConstellationDragging(true);
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleConstellationPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const viewport = constellationViewportRef.current;
+    if (!viewport || !constellationDragRef.current.active) return;
+    event.preventDefault();
+    viewport.scrollLeft = constellationDragRef.current.scrollLeft - (event.clientX - constellationDragRef.current.startX);
+    viewport.scrollTop = constellationDragRef.current.scrollTop - (event.clientY - constellationDragRef.current.startY);
+  };
+
+  const endConstellationDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!constellationDragRef.current.active) return;
+    constellationDragRef.current.active = false;
+    setConstellationDragging(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const resetConstellationViewport = () => {
+    constellationViewportRef.current?.scrollTo({ left: 0, top: 0, behavior: "smooth" });
   };
 
   const clearDirectoryFilters = () => {
@@ -955,10 +1061,18 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="constellation-tabs" role="tablist" aria-label="选择帝王关系星群">
-          {rulerConstellations.map((constellation) => (
+        <div
+          ref={constellationTabsRef}
+          className="constellation-tabs"
+          role="tablist"
+          aria-label="滑动选择帝王关系星群"
+          onScroll={handleConstellationTabsScroll}
+          onWheel={handleConstellationTabsWheel}
+        >
+          {rulerConstellations.map((constellation, index) => (
             <button
               key={constellation.id}
+              ref={(element) => { constellationTabRefs.current[index] = element; }}
               id={`constellation-tab-${constellation.id}`}
               type="button"
               role="tab"
@@ -994,25 +1108,44 @@ export default function Home() {
             <span><i className="conflict" />宗族冲突与夺位</span>
           </div>
 
-          <div className="constellation-viewport" tabIndex={0} aria-label="可横向滚动的帝王关系星谱">
+          <div className="constellation-canvas-tools">
+            <p><span aria-hidden="true">↔</span> 滚轮或触控板平移 · 拖拽探索画布 · 点击人物查看身份卡</p>
+            <button type="button" onClick={resetConstellationViewport}>回到起点</button>
+          </div>
+
+          <div
+            ref={constellationViewportRef}
+            className={`constellation-viewport${constellationDragging ? " dragging" : ""}`}
+            tabIndex={0}
+            aria-label="可自由滚动和拖拽的帝王关系星谱"
+            onWheel={handleConstellationWheel}
+            onPointerDown={handleConstellationPointerDown}
+            onPointerMove={handleConstellationPointerMove}
+            onPointerUp={endConstellationDrag}
+            onPointerCancel={endConstellationDrag}
+          >
             <div className="constellation-map">
               {activeConstellation.edges.map((edge) => {
                 const from = activeConstellation.nodes.find((node) => node.id === edge.from);
                 const to = activeConstellation.nodes.find((node) => node.id === edge.to);
                 if (!from || !to) return null;
-                const dx = to.x - from.x;
-                const dy = to.y - from.y;
+                const fromX = from.x * constellationCanvas.scaleX + constellationCanvas.offsetX;
+                const fromY = from.y * constellationCanvas.scaleY + constellationCanvas.offsetY;
+                const toX = to.x * constellationCanvas.scaleX + constellationCanvas.offsetX;
+                const toY = to.y * constellationCanvas.scaleY + constellationCanvas.offsetY;
+                const dx = toX - fromX;
+                const dy = toY - fromY;
                 const length = Math.hypot(dx, dy);
                 const angle = Math.atan2(dy, dx) * (180 / Math.PI);
                 return (
                   <span key={`${edge.from}-${edge.to}-${edge.label}`} aria-hidden="true">
                     <i
                       className={`constellation-link ${edge.kind}`}
-                      style={{ left: from.x, top: from.y, width: length, transform: `rotate(${angle}deg)` }}
+                      style={{ left: fromX, top: fromY, width: length, transform: `rotate(${angle}deg)` }}
                     />
                     <b
                       className={`constellation-edge-label ${edge.kind}`}
-                      style={{ left: (from.x + to.x) / 2, top: (from.y + to.y) / 2 + (edge.labelOffset ?? 0) }}
+                      style={{ left: (fromX + toX) / 2, top: (fromY + toY) / 2 + (edge.labelOffset ?? 0) }}
                     >
                       {edge.label}
                     </b>
@@ -1028,7 +1161,10 @@ export default function Home() {
                     key={node.id}
                     type="button"
                     className="constellation-node"
-                    style={{ left: node.x, top: node.y }}
+                    style={{
+                      left: node.x * constellationCanvas.scaleX + constellationCanvas.offsetX,
+                      top: node.y * constellationCanvas.scaleY + constellationCanvas.offsetY,
+                    }}
                     aria-label={`打开${ruler.name}身份卡`}
                     aria-haspopup="dialog"
                     onClick={(event) => openRuler(ruler, event.currentTarget)}

@@ -998,6 +998,7 @@ a:focus-visible {
 }
 
 .constellation-tabs {
+  cursor: grab;
   display: flex;
   gap: 10px;
   margin: 28px auto 18px;
@@ -1006,6 +1007,7 @@ a:focus-visible {
   padding-bottom: 8px;
   scrollbar-color: #8f704c #202423;
   scroll-snap-type: x proximity;
+  touch-action: pan-x;
 }
 
 .constellation-tabs button {
@@ -1114,6 +1116,35 @@ a:focus-visible {
   background: #b75b51;
 }
 
+.constellation-canvas-tools {
+  align-items: center;
+  border-bottom: 1px solid rgb(228 211 177 / 0.14);
+  display: flex;
+  justify-content: space-between;
+  padding: 9px 24px;
+}
+
+.constellation-canvas-tools p {
+  color: #858b87;
+  font-size: 10px;
+  margin: 0;
+}
+
+.constellation-canvas-tools p span {
+  color: #d5ad72;
+  font-size: 15px;
+  margin-right: 5px;
+}
+
+.constellation-canvas-tools button {
+  background: transparent;
+  border: 1px solid rgb(213 173 114 / 0.42);
+  color: #d5ad72;
+  cursor: pointer;
+  font-size: 10px;
+  padding: 6px 10px;
+}
+
 .constellation-viewport {
   background:
     radial-gradient(circle at 8% 17%, rgb(255 244 210 / 0.5) 0 1px, transparent 1.5px),
@@ -1122,14 +1153,23 @@ a:focus-visible {
     radial-gradient(circle at 88% 81%, rgb(255 244 210 / 0.46) 0 1px, transparent 1.5px),
     linear-gradient(180deg, #101415, #171b1b);
   background-size: 137px 113px, 173px 149px, 211px 167px, 191px 131px, auto;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
+  cursor: grab;
+  height: 440px;
+  overflow: auto;
+  overscroll-behavior: contain;
   scrollbar-color: #8f704c #202423;
+  touch-action: pan-x pan-y;
+  user-select: none;
+}
+
+.constellation-viewport.dragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
 }
 
 .constellation-map {
-  height: 410px;
-  min-width: 1020px;
+  height: 560px;
+  width: 1760px;
   position: relative;
 }
 
@@ -2489,8 +2529,14 @@ footer span {
     padding-inline: 18px;
   }
 
-  .constellation-map {
-    height: 390px;
+  .constellation-canvas-tools {
+    align-items: flex-start;
+    gap: 12px;
+    padding-inline: 18px;
+  }
+
+  .constellation-viewport {
+    height: 420px;
   }
 
   .constellation-relations {

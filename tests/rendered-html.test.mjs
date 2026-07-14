@@ -55,6 +55,11 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(page, /<dialog/);
   assert.match(page, /role="tablist"/);
   assert.match(page, /className="constellation-node"/);
+  assert.match(page, /handleConstellationWheel/);
+  assert.match(page, /handleConstellationPointerMove/);
+  assert.match(page, /handleConstellationTabsScroll/);
+  assert.match(page, /handleConstellationTabsWheel/);
+  assert.match(page, /可自由滚动和拖拽的帝王关系星谱/);
   assert.match(page, /onClick=\{\(event\) => openRuler\(ruler, event\.currentTarget\)\}/);
   assert.match(page, /aria-haspopup="dialog"/);
   assert.match(page, /onCancel=/);
