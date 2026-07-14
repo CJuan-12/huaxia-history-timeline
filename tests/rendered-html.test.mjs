@@ -66,6 +66,11 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(page, /母亲与承袭来源/);
   assert.match(page, /皇位从哪里来/);
   assert.match(page, /selectedRuler\.lineage\.mother/);
+  assert.match(page, /className="topbar-nav"/);
+  assert.match(page, /snapToNearestEra/);
+  assert.match(page, /wheelSettleRef/);
+  assert.match(page, /clearDirectoryFilters/);
+  assert.match(page, /era-panel\$\{index === current \? " active" : ""\}/);
   assert.match(page, /<sup aria-hidden="true">\?<\/sup>/);
 
   const mbtiCriteriaBlock = page.match(/const mbtiCriteria = \[([\s\S]*?)\] as const;/)?.[1] ?? "";

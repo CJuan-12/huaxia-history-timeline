@@ -455,13 +455,16 @@ function RulerTeaser({
 
 export default function Home() {
   const railRef = useRef<HTMLDivElement>(null);
+  const eraJumpRef = useRef<HTMLElement>(null);
+  const eraButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const rulerOpenerRef = useRef<HTMLButtonElement | null>(null);
   const panelRefs = useRef<Array<HTMLElement | null>>([]);
+  const wheelSettleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragRef = useRef({ active: false, startX: 0, startScroll: 0 });
   const [current, setCurrent] = useState(0);
-  const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
+  const [activeSection, setActiveSection] = useState<"timeline" | "constellation" | "archive">("timeline");
   const directoryRef = useRef<HTMLElement>(null);
   const constellationRef = useRef<HTMLElement>(null);
   const [selectedRuler, setSelectedRuler] = useState<CatalogRulerProfile | null>(null);
@@ -488,8 +491,6 @@ export default function Home() {
   const updateFromScroll = useCallback(() => {
     const rail = railRef.current;
     if (!rail) return;
-    const maxScroll = rail.scrollWidth - rail.clientWidth;
-    setProgress(maxScroll > 0 ? (rail.scrollLeft / maxScroll) * 100 : 0);
 
     const center = rail.scrollLeft + rail.clientWidth / 2;
     let nearest = 0;
@@ -523,9 +524,48 @@ export default function Home() {
   }, [updateFromScroll]);
 
   useEffect(() => {
+    const jump = eraJumpRef.current;
+    const button = eraButtonRefs.current[current];
+    if (!jump || !button) return;
+    const nextLeft = button.offsetLeft - jump.clientWidth / 2 + button.offsetWidth / 2;
+    jump.scrollTo({ left: Math.max(0, nextLeft), behavior: "smooth" });
+  }, [current]);
+
+  useEffect(() => {
+    let frame = 0;
+    const updateActiveSection = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const marker = 150;
+        const constellationTop = constellationRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+        const archiveTop = directoryRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+        setActiveSection(archiveTop <= marker ? "archive" : constellationTop <= marker ? "constellation" : "timeline");
+      });
+    };
+    window.addEventListener("scroll", updateActiveSection, { passive: true });
+    updateActiveSection();
+    return () => {
+      window.removeEventListener("scroll", updateActiveSection);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  useEffect(() => {
     const dialog = dialogRef.current;
-    if (selectedRuler && dialog && !dialog.open) dialog.showModal();
+    if (selectedRuler && dialog && !dialog.open) {
+      dialog.querySelector<HTMLElement>(".ruler-dialog-shell")?.scrollTo({ top: 0 });
+      dialog.showModal();
+    }
   }, [selectedRuler]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dialog-open", Boolean(selectedRuler));
+    return () => document.documentElement.classList.remove("dialog-open");
+  }, [selectedRuler]);
+
+  useEffect(() => () => {
+    if (wheelSettleRef.current) clearTimeout(wheelSettleRef.current);
+  }, []);
 
   const scrollToEra = useCallback((index: number) => {
     const next = clamp(index, 0, eras.length - 1);
@@ -537,13 +577,22 @@ export default function Home() {
     setCurrent(next);
   }, []);
 
-  const handleRange = (value: number) => {
+  const snapToNearestEra = useCallback(() => {
     const rail = railRef.current;
     if (!rail) return;
-    const maxScroll = rail.scrollWidth - rail.clientWidth;
-    rail.scrollTo({ left: (value / 100) * maxScroll, behavior: "auto" });
-    setProgress(value);
-  };
+    const center = rail.scrollLeft + rail.clientWidth / 2;
+    let nearest = 0;
+    let distance = Number.POSITIVE_INFINITY;
+    panelRefs.current.forEach((panel, index) => {
+      if (!panel) return;
+      const nextDistance = Math.abs(panel.offsetLeft + panel.offsetWidth / 2 - center);
+      if (nextDistance < distance) {
+        nearest = index;
+        distance = nextDistance;
+      }
+    });
+    scrollToEra(nearest);
+  }, [scrollToEra]);
 
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
     const rail = railRef.current;
@@ -552,7 +601,10 @@ export default function Home() {
     const atEnd = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 1 && event.deltaY > 0;
     if (atStart || atEnd) return;
     event.preventDefault();
-    rail.scrollLeft += event.deltaY;
+    const unit = event.deltaMode === 1 ? 26 : event.deltaMode === 2 ? rail.clientWidth : 1;
+    rail.scrollBy({ left: event.deltaY * unit, behavior: "auto" });
+    if (wheelSettleRef.current) clearTimeout(wheelSettleRef.current);
+    wheelSettleRef.current = setTimeout(snapToNearestEra, 140);
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -578,6 +630,7 @@ export default function Home() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
+    requestAnimationFrame(snapToNearestEra);
   };
 
   const openRuler = (ruler: CatalogRulerProfile, opener: HTMLButtonElement) => {
@@ -601,6 +654,18 @@ export default function Home() {
     requestAnimationFrame(() => {
       constellationRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  };
+
+  const showTimeline = () => {
+    document.getElementById("timeline")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() => railRef.current?.focus({ preventScroll: true }));
+  };
+
+  const clearDirectoryFilters = () => {
+    setRulerQuery("");
+    setRulerEra("all");
+    setRulerPolity("all");
+    setVisibleRulerCount(18);
   };
 
   const closeRuler = () => {
@@ -646,6 +711,11 @@ export default function Home() {
             <small>中国古代历史时间轴</small>
           </span>
         </a>
+        <nav className="topbar-nav" aria-label="页面快速导航">
+          <button type="button" className={activeSection === "timeline" ? "active" : ""} onClick={showTimeline} aria-current={activeSection === "timeline" ? "page" : undefined}>时间轴</button>
+          <button type="button" className={activeSection === "constellation" ? "active" : ""} onClick={() => showConstellation(currentEra.id)} aria-current={activeSection === "constellation" ? "page" : undefined}>关系星谱</button>
+          <button type="button" className={activeSection === "archive" ? "active" : ""} onClick={() => showRulerDirectory(rulerEra)} aria-current={activeSection === "archive" ? "page" : undefined}>君王档案</button>
+        </nav>
         <div className="current-era" aria-live="polite">
           <span>正在浏览</span>
           <strong>{currentEra.name}</strong>
@@ -689,10 +759,10 @@ export default function Home() {
             <input
               type="range"
               min="0"
-              max="100"
-              step="0.1"
-              value={progress}
-              onChange={(event) => handleRange(Number(event.target.value))}
+              max={eras.length - 1}
+              step="1"
+              value={current}
+              onChange={(event) => scrollToEra(Number(event.target.value))}
               aria-label="拖动历史时间轴"
               aria-valuetext={timelineLabel}
               aria-controls="history-rail"
@@ -709,10 +779,11 @@ export default function Home() {
           </button>
         </div>
 
-        <nav className="era-jump" aria-label="快速选择朝代">
+        <nav ref={eraJumpRef} className="era-jump" aria-label="快速选择朝代">
           {eras.map((era, index) => (
             <button
               key={era.id}
+              ref={(node) => { eraButtonRefs.current[index] = node; }}
               type="button"
               className={index === current ? "active" : ""}
               onClick={() => scrollToEra(index)}
@@ -744,7 +815,7 @@ export default function Home() {
               ref={(node) => {
                 panelRefs.current[index] = node;
               }}
-              className="era-panel"
+              className={`era-panel${index === current ? " active" : ""}`}
               data-era-index={index}
               aria-labelledby={`era-${era.id}`}
             >
@@ -1046,8 +1117,8 @@ export default function Home() {
         </div>
 
         <div className="directory-status" aria-live="polite">
-          <strong>找到 {filteredRulers.length} 位</strong>
-          <span>已显示 {Math.min(visibleRulerCount, filteredRulers.length)} 位</span>
+          <div><strong>找到 {filteredRulers.length} 位</strong><span>已显示 {Math.min(visibleRulerCount, filteredRulers.length)} 位</span></div>
+          <button type="button" onClick={clearDirectoryFilters} disabled={!rulerQuery && rulerEra === "all" && rulerPolity === "all"}>清除筛选</button>
         </div>
 
         {filteredRulers.length ? (

@@ -24,7 +24,12 @@
 }
 
 html {
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
+}
+
+html.dialog-open {
+  overflow: hidden;
 }
 
 body {
@@ -78,6 +83,41 @@ a:focus-visible {
   position: sticky;
   top: 0;
   z-index: 20;
+}
+
+.topbar-nav {
+  align-items: center;
+  background: rgb(255 253 248 / 0.58);
+  border: 1px solid rgb(159 149 130 / 0.42);
+  border-radius: 999px;
+  display: flex;
+  gap: 2px;
+  left: 50%;
+  padding: 3px;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+.topbar-nav button {
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
+  color: var(--ink-3);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 8px 12px;
+  transition: background 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.topbar-nav button:hover {
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.topbar-nav button.active {
+  background: var(--ink);
+  color: var(--surface-bright);
 }
 
 .brand {
@@ -230,7 +270,13 @@ a:focus-visible {
   gap: 14px;
   grid-template-columns: 48px minmax(0, 720px) 48px;
   justify-content: center;
-  padding: 0 clamp(20px, 5vw, 76px);
+  backdrop-filter: blur(16px);
+  background: linear-gradient(180deg, rgb(243 239 229 / 0.97), rgb(243 239 229 / 0.88));
+  border-bottom: 1px solid rgb(159 149 130 / 0.3);
+  padding: 12px clamp(20px, 5vw, 76px) 11px;
+  position: sticky;
+  top: 72px;
+  z-index: 14;
 }
 
 .arrow-button {
@@ -329,7 +375,7 @@ a:focus-visible {
   overflow-x: auto;
   overscroll-behavior-x: contain;
   padding: 88px max(7vw, calc((100vw - min(86vw, 980px)) / 2)) 76px;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-snap-type: x proximity;
   scrollbar-color: var(--cinnabar) transparent;
   scrollbar-width: thin;
@@ -353,6 +399,16 @@ a:focus-visible {
   position: relative;
   scroll-snap-align: center;
   user-select: text;
+  opacity: 0.7;
+  transform: scale(0.982);
+  transform-origin: center center;
+  transition: opacity 240ms ease, transform 320ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease;
+}
+
+.era-panel.active {
+  box-shadow: 0 30px 82px rgb(60 48 30 / 0.16);
+  opacity: 1;
+  transform: scale(1);
 }
 
 .era-panel::after {
@@ -1401,6 +1457,9 @@ a:focus-visible {
   grid-template-columns: minmax(260px, 1.5fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr);
   margin-top: 26px;
   padding: 16px;
+  position: sticky;
+  top: 86px;
+  z-index: 9;
 }
 
 .directory-controls label {
@@ -1433,10 +1492,16 @@ a:focus-visible {
 }
 
 .directory-status {
-  align-items: baseline;
+  align-items: center;
   display: flex;
   justify-content: space-between;
   margin: 22px 0 13px;
+}
+
+.directory-status > div {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
 }
 
 .directory-status strong {
@@ -1447,6 +1512,27 @@ a:focus-visible {
 .directory-status span {
   color: var(--ink-3);
   font-size: 10px;
+}
+
+.directory-status button {
+  background: transparent;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  color: var(--ink-2);
+  cursor: pointer;
+  font-size: 9px;
+  padding: 6px 10px;
+  transition: border-color 160ms ease, color 160ms ease, opacity 160ms ease;
+}
+
+.directory-status button:hover:not(:disabled) {
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
+}
+
+.directory-status button:disabled {
+  cursor: default;
+  opacity: 0.35;
 }
 
 .directory-grid {
@@ -1523,12 +1609,43 @@ a:focus-visible {
   max-width: none;
   overflow: visible;
   padding: 0;
+  opacity: 0;
+  transform: translateY(18px) scale(0.985);
+  transition:
+    opacity 220ms ease,
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    overlay 220ms allow-discrete,
+    display 220ms allow-discrete;
   width: min(960px, calc(100vw - 34px));
+}
+
+.ruler-dialog[open] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@starting-style {
+  .ruler-dialog[open] {
+    opacity: 0;
+    transform: translateY(22px) scale(0.98);
+  }
 }
 
 .ruler-dialog::backdrop {
   backdrop-filter: blur(6px);
   background: rgb(24 22 19 / 0.72);
+  opacity: 0;
+  transition: opacity 220ms ease, overlay 220ms allow-discrete, display 220ms allow-discrete;
+}
+
+.ruler-dialog[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  .ruler-dialog[open]::backdrop {
+    opacity: 0;
+  }
 }
 
 .ruler-dialog-shell {
@@ -2156,6 +2273,14 @@ footer span {
 }
 
 @media (max-width: 900px) {
+  .topbar-nav {
+    left: auto;
+    margin-left: auto;
+    margin-right: 16px;
+    position: static;
+    transform: none;
+  }
+
   .current-era em {
     display: none;
   }
@@ -2218,6 +2343,15 @@ footer span {
     font-size: 18px;
   }
 
+  .topbar-nav {
+    margin-right: 8px;
+  }
+
+  .topbar-nav button {
+    font-size: 9px;
+    padding: 7px 8px;
+  }
+
   .hero {
     padding: 56px 20px 38px;
   }
@@ -2236,6 +2370,7 @@ footer span {
     gap: 8px;
     grid-template-columns: 44px minmax(0, 1fr) 44px;
     padding-inline: 14px;
+    top: 64px;
   }
 
   .arrow-button {
@@ -2369,6 +2504,21 @@ footer span {
   .directory-heading,
   .directory-controls {
     grid-template-columns: 1fr;
+  }
+
+  .directory-controls {
+    position: static;
+  }
+
+  .directory-status {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .directory-status > div {
+    align-items: flex-start;
+    display: grid;
+    gap: 2px;
   }
 
   .directory-heading {
