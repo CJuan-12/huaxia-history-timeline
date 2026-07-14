@@ -461,7 +461,13 @@ export default function Home() {
   const rulerOpenerRef = useRef<HTMLButtonElement | null>(null);
   const panelRefs = useRef<Array<HTMLElement | null>>([]);
   const wheelSettleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dragRef = useRef({ active: false, startX: 0, startScroll: 0 });
+  const dragRef = useRef({
+    active: false,
+    axis: "idle" as "idle" | "pending" | "x" | "y",
+    startX: 0,
+    startY: 0,
+    startScroll: 0,
+  });
   const [current, setCurrent] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [activeSection, setActiveSection] = useState<"timeline" | "constellation" | "archive">("timeline");
@@ -596,41 +602,76 @@ export default function Home() {
 
   const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
     const rail = railRef.current;
-    if (!rail || event.ctrlKey || Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
-    const atStart = rail.scrollLeft <= 1 && event.deltaY < 0;
-    const atEnd = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 1 && event.deltaY > 0;
-    if (atStart || atEnd) return;
+    if (!rail || event.ctrlKey) return;
+
+    const explicitShiftScroll = event.shiftKey && Math.abs(event.deltaY) > Math.abs(event.deltaX);
+    const horizontalDelta = explicitShiftScroll ? event.deltaY : event.deltaX;
+    const isHorizontalGesture = explicitShiftScroll
+      || Math.abs(event.deltaX) > Math.abs(event.deltaY) * 1.15;
+
+    // Keep ordinary mouse-wheel and vertical trackpad gestures on the page.
+    // The timeline only takes over after the gesture is clearly horizontal.
+    if (!isHorizontalGesture || horizontalDelta === 0) return;
     event.preventDefault();
     const unit = event.deltaMode === 1 ? 26 : event.deltaMode === 2 ? rail.clientWidth : 1;
-    rail.scrollBy({ left: event.deltaY * unit, behavior: "auto" });
+    rail.scrollBy({ left: horizontalDelta * unit, behavior: "auto" });
     if (wheelSettleRef.current) clearTimeout(wheelSettleRef.current);
     wheelSettleRef.current = setTimeout(snapToNearestEra, 140);
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || event.pointerType !== "mouse") return;
+    if (event.button !== 0) return;
     const target = event.target as HTMLElement;
     if (target.closest("button, summary, input, a")) return;
     const rail = railRef.current;
     if (!rail) return;
-    dragRef.current = { active: true, startX: event.clientX, startScroll: rail.scrollLeft };
-    setDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const isMouse = event.pointerType === "mouse";
+    dragRef.current = {
+      active: true,
+      axis: isMouse ? "x" : "pending",
+      startX: event.clientX,
+      startY: event.clientY,
+      startScroll: rail.scrollLeft,
+    };
+    if (isMouse) {
+      setDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current.active || !railRef.current) return;
-    railRef.current.scrollLeft = dragRef.current.startScroll - (event.clientX - dragRef.current.startX);
+    const deltaX = event.clientX - dragRef.current.startX;
+    const deltaY = event.clientY - dragRef.current.startY;
+
+    if (dragRef.current.axis === "pending") {
+      if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 8) return;
+      if (Math.abs(deltaY) >= Math.abs(deltaX) * 1.15) {
+        dragRef.current.axis = "y";
+        dragRef.current.active = false;
+        return;
+      }
+      if (Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return;
+      dragRef.current.axis = "x";
+      setDragging(true);
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
+
+    if (dragRef.current.axis !== "x") return;
+    event.preventDefault();
+    railRef.current.scrollLeft = dragRef.current.startScroll - deltaX;
   };
 
   const endPointerDrag = (event: PointerEvent<HTMLDivElement>) => {
     if (!dragRef.current.active) return;
+    const shouldSnap = dragRef.current.axis === "x";
     dragRef.current.active = false;
+    dragRef.current.axis = "idle";
     setDragging(false);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    requestAnimationFrame(snapToNearestEra);
+    if (shouldSnap) requestAnimationFrame(snapToNearestEra);
   };
 
   const openRuler = (ruler: CatalogRulerProfile, opener: HTMLButtonElement) => {
