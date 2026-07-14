@@ -39,12 +39,14 @@ test("server-renders the history timeline and featured rulers", async () => {
 });
 
 test("keeps ruler profiles accessible and portrait assets local", async () => {
-  const [page, profiles, portraitCatalog, catalog, constellations, layout, packageJson, portraits] = await Promise.all([
+  const [page, profiles, portraitCatalog, catalog, constellations, lineage, lineageData, layout, packageJson, portraits] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-profiles.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-portraits.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-constellations.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-lineage.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-lineage-data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readdir(new URL("../public/rulers/", import.meta.url)),
@@ -61,6 +63,9 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(page, /关系行为观察/);
   assert.match(page, /五项辅助判定标准/);
   assert.match(page, /结构代理/);
+  assert.match(page, /母亲与承袭来源/);
+  assert.match(page, /皇位从哪里来/);
+  assert.match(page, /selectedRuler\.lineage\.mother/);
   assert.match(page, /<sup aria-hidden="true">\?<\/sup>/);
 
   const mbtiCriteriaBlock = page.match(/const mbtiCriteria = \[([\s\S]*?)\] as const;/)?.[1] ?? "";
@@ -86,6 +91,7 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(profiles, /Wikimedia Commons 公版/);
   assert.doesNotMatch(catalog, /code: "待考"/);
   assert.match(catalog, /psychology: PsychologyAssessment/);
+  assert.match(catalog, /lineage: RulerLineage/);
   assert.match(catalog, /kind: "暂无可靠传世画像"/);
   assert.match(catalog, /未采用现代想象图/);
   assert.match(layout, /443 位君主身份档案/);
@@ -116,6 +122,14 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(constellations, /"partnership"/);
   assert.match(constellations, /"conflict"/);
   assert.doesNotMatch(page, /<svg/);
+  assert.match(lineage, /前任亲生子/);
+  assert.match(lineage, /兄弟承袭/);
+  assert.match(lineage, /非直系入继/);
+  assert.match(lineage, /母亲身份未见可核对记录/);
+  assert.ok([...lineageData.matchAll(/^  "[^"\n]+": \{/gm)].length >= 400);
+  assert.ok([...lineageData.matchAll(/mother: /g)].length >= 250);
+  assert.ok([...lineageData.matchAll(/father: /g)].length >= 380);
+  assert.match(lineageData, /"qing:顺治帝福临"[\s\S]*mother: "孝庄文皇后"/);
 
   await access(new URL("../public/og.png", import.meta.url));
 

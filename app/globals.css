@@ -1786,6 +1786,108 @@ a:focus-visible {
   margin: 16px 0 0;
 }
 
+.lineage-card {
+  background: linear-gradient(135deg, rgb(247 242 230 / 0.96), rgb(251 249 243 / 0.9));
+  border: 1px solid var(--rule-strong);
+  box-shadow: inset 3px 0 0 var(--cinnabar);
+  margin-top: 17px;
+  padding: 15px 16px 14px;
+}
+
+.lineage-heading {
+  align-items: center;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+}
+
+.lineage-heading span {
+  color: var(--cinnabar-dark);
+  display: block;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.lineage-heading h3 {
+  font-family: var(--serif);
+  font-size: 17px;
+  margin: 4px 0 0;
+}
+
+.lineage-heading em {
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  flex: 0 0 auto;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  padding: 5px 8px;
+}
+
+.lineage-evidence-documented {
+  background: rgb(99 113 102 / 0.12);
+  color: var(--bronze);
+}
+
+.lineage-evidence-partial {
+  background: rgb(183 139 72 / 0.14);
+  color: #7b581e;
+}
+
+.lineage-evidence-scarce {
+  background: rgb(124 117 105 / 0.11);
+  color: var(--ink-3);
+}
+
+.lineage-facts {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 13px 0 0;
+}
+
+.lineage-facts div {
+  background: rgb(255 255 255 / 0.48);
+  border: 1px solid var(--rule);
+  min-width: 0;
+  padding: 9px 10px;
+}
+
+.lineage-facts dt {
+  color: var(--ink-3);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.lineage-facts dd {
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.5;
+  margin: 4px 0 0;
+}
+
+.lineage-card > p {
+  color: var(--ink-2);
+  font-size: 10px;
+  line-height: 1.7;
+  margin: 12px 0 0;
+}
+
+.lineage-card > a,
+.lineage-card > small {
+  color: var(--cinnabar-dark);
+  display: inline-block;
+  font-size: 8px;
+  margin-top: 9px;
+  text-decoration: none;
+}
+
+.lineage-card > a:hover {
+  text-decoration: underline;
+}
+
 .mbti-basis {
   background: rgb(243 239 229 / 0.72);
   border-left: 2px solid var(--gold);
@@ -2342,6 +2444,7 @@ footer span {
   }
 
   .ruler-facts,
+  .lineage-facts,
   .profile-columns {
     grid-template-columns: 1fr;
   }

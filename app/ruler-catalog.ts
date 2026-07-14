@@ -2,6 +2,7 @@ import { rulerProfiles, type RulerProfile } from "./ruler-profiles";
 import { additionalRulerPortraits } from "./ruler-portraits";
 import { buildPsychologyAssessment } from "./ruler-psychology";
 import type { PsychologyAssessment } from "./ruler-psychology-types";
+import { buildRulerLineage, type RulerLineage } from "./ruler-lineage";
 
 /**
  * Lightweight catalogue metadata layered over the twelve fully researched
@@ -17,6 +18,7 @@ export type CatalogRulerProfile = RulerProfile & {
   portraitStatus: "available" | "unavailable";
   mbtiStatus: "inferred" | "withheld";
   psychology: PsychologyAssessment;
+  lineage: RulerLineage;
   featuredRank?: number;
 };
 
@@ -28,6 +30,8 @@ type RulerSeed = {
   order: number;
   reign?: string;
   aliases?: string[];
+  predecessorKey?: string;
+  predecessorName?: string;
 };
 
 type PolitySeed = {
@@ -164,6 +168,8 @@ const rulerSeeds: RulerSeed[] = politySeeds.flatMap((group) => {
       order: index + 1,
       reign: reignOverrides[seedKey],
       aliases: aliasOverrides[seedKey] ?? [],
+      predecessorKey: index > 0 ? `${group.eraId}:${group.rulers.split("|")[index - 1]}` : undefined,
+      predecessorName: index > 0 ? group.rulers.split("|")[index - 1] : undefined,
     };
   });
 });
@@ -183,6 +189,13 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
     eraId: seed.eraId,
     order: seed.order,
   }, curated?.mbti);
+  const lineage = buildRulerLineage({
+    key: seedKey,
+    name: seed.name,
+    polity: seed.polity,
+    predecessorKey: seed.predecessorKey,
+    predecessorName: seed.predecessorName,
+  });
 
   if (curated) {
     return {
@@ -196,6 +209,7 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
       portraitStatus: curated.portrait.src ? "available" : "unavailable",
       mbtiStatus: "inferred",
       psychology,
+      lineage,
     };
   }
 
@@ -235,6 +249,7 @@ function createIndexProfile(seed: RulerSeed): CatalogRulerProfile {
     portraitStatus: additionalPortrait ? "available" : "unavailable",
     mbtiStatus: "inferred",
     psychology,
+    lineage,
   };
 }
 

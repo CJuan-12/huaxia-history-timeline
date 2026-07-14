@@ -1123,6 +1123,27 @@ export default function Home() {
 
               <p className="ruler-identity" id="ruler-dialog-description">{selectedRuler.identity}</p>
 
+              <section className="lineage-card" aria-labelledby="lineage-title">
+                <div className="lineage-heading">
+                  <div>
+                    <span>母亲与承袭来源</span>
+                    <h3 id="lineage-title">皇位从哪里来</h3>
+                  </div>
+                  <em className={`lineage-evidence-${selectedRuler.lineage.evidence}`}>
+                    {selectedRuler.lineage.relation}
+                  </em>
+                </div>
+                <dl className="lineage-facts">
+                  <div><dt>母亲</dt><dd>{selectedRuler.lineage.mother}</dd></div>
+                  <div><dt>父亲</dt><dd>{selectedRuler.lineage.father}</dd></div>
+                  <div><dt>前任</dt><dd>{selectedRuler.lineage.predecessor}</dd></div>
+                </dl>
+                <p>{selectedRuler.lineage.summary}</p>
+                {selectedRuler.lineage.sourceUrl ? (
+                  <a href={selectedRuler.lineage.sourceUrl} target="_blank" rel="noreferrer">查看父母资料索引 ↗</a>
+                ) : <small>早期或材料稀少人物暂未匹配到可靠父母条目。</small>}
+              </section>
+
               <div className="profile-traits" aria-label="史料性格标签">
                 {selectedRuler.traits.map((trait) => <span key={trait}>{trait}</span>)}
               </div>
