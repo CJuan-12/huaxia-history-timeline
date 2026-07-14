@@ -96,7 +96,7 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
 
   const referencedPortraits = [profiles, portraitCatalog]
     .flatMap((source) => [...source.matchAll(/src: "\/rulers\/([^"/]+)"/g)].map((match) => match[1]));
-  assert.equal([...portraitCatalog.matchAll(/^  "[^"\n]+": \{/gm)].length, 17);
+  assert.equal([...portraitCatalog.matchAll(/^  "[^"\n]+": \{/gm)].length, 32);
   assert.match(portraitCatalog, /Wikimedia Commons 公版/);
   assert.equal(portraits.length, referencedPortraits.length);
   assert.deepEqual([...portraits].sort(), [...referencedPortraits].sort());
