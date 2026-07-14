@@ -463,6 +463,7 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [dragging, setDragging] = useState(false);
   const directoryRef = useRef<HTMLElement>(null);
+  const constellationRef = useRef<HTMLElement>(null);
   const [selectedRuler, setSelectedRuler] = useState<CatalogRulerProfile | null>(null);
   const [rulerQuery, setRulerQuery] = useState("");
   const [rulerEra, setRulerEra] = useState("all");
@@ -591,6 +592,14 @@ export default function Home() {
     setVisibleRulerCount(18);
     requestAnimationFrame(() => {
       directoryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const showConstellation = (eraId: string) => {
+    const match = rulerConstellations.find((item) => item.eraId === eraId);
+    if (match) setConstellationId(match.id);
+    requestAnimationFrame(() => {
+      constellationRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
 
@@ -818,15 +827,20 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="constellation-section" aria-labelledby="constellation-title">
+      <section ref={constellationRef} className="constellation-section" aria-labelledby="constellation-title">
         <div className="constellation-heading">
           <div>
             <p>RULER CONSTELLATIONS</p>
             <h2 id="constellation-title">帝王关系星谱</h2>
           </div>
-          <p>
-            把家族、继承、共治与冲突放回同一张关系网。选择一个历史星群，再点击任意君王星点打开完整身份卡。
-          </p>
+          <div className="constellation-heading-copy">
+            <p>
+              覆盖全部 {eras.length} 个历史时期，把家族、继承、共治与冲突放回同一张关系网。复杂分裂时期采用代表政权节点，不强行拼成单一家谱。
+            </p>
+            <button type="button" onClick={() => showConstellation(currentEra.id)}>
+              定位到正在浏览的「{currentEra.name}」关系 →
+            </button>
+          </div>
         </div>
 
         <div className="constellation-tabs" role="tablist" aria-label="选择帝王关系星群">

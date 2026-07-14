@@ -11,7 +11,7 @@ export type RulerProfile = {
   portrait: {
     src?: string;
     alt: string;
-    kind: "宫廷画像" | "传世画像" | "后世绘像" | "暂无可靠传世画像";
+    kind: "宫廷画像" | "传世画像" | "后世绘像" | "历史照片" | "暂无可靠传世画像";
     credit: string;
     sourceUrl?: string;
   };

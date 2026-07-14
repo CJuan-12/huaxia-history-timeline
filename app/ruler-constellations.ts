@@ -20,6 +20,7 @@ export type ConstellationEdge = {
 
 export type RulerConstellation = {
   id: string;
+  eraId: string;
   eyebrow: string;
   title: string;
   period: string;
@@ -28,75 +29,148 @@ export type RulerConstellation = {
   edges: ConstellationEdge[];
 };
 
+type NodeSeed = [id: string, rulerName: string, label: string, years: string, y?: number];
+type EdgeSeed = [from: number, to: number, kind: ConstellationRelationKind, label: string, detail: string, labelOffset?: number];
+
+function constellation(
+  meta: Omit<RulerConstellation, "nodes" | "edges">,
+  seeds: NodeSeed[],
+  relations: EdgeSeed[],
+): RulerConstellation {
+  const span = seeds.length > 1 ? 850 / (seeds.length - 1) : 0;
+  const nodes = seeds.map(([id, rulerName, label, years, customY], index) => ({
+    id,
+    rulerName,
+    label,
+    years,
+    x: 85 + span * index,
+    y: customY ?? (index % 2 === 0 ? 125 : 285),
+  }));
+  const edges = relations.map(([from, to, kind, label, detail, labelOffset]) => ({
+    from: nodes[from].id,
+    to: nodes[to].id,
+    kind,
+    label,
+    detail,
+    labelOffset,
+  }));
+  return { ...meta, nodes, edges };
+}
+
 export const rulerConstellations: RulerConstellation[] = [
-  {
-    id: "early-tang",
-    eyebrow: "唐初至开元",
-    title: "李唐与武周权力星群",
-    period: "618—712",
-    intro: "从李渊建唐到李隆基即位，父子继承、夫妻共治与母子权力关系彼此交叠。",
-    nodes: [
-      { id: "li-yuan", rulerName: "唐高祖李渊", label: "李渊", years: "618—626", x: 90, y: 140 },
-      { id: "li-shimin", rulerName: "唐太宗李世民", label: "李世民", years: "626—649", x: 245, y: 140 },
-      { id: "li-zhi", rulerName: "唐高宗李治", label: "李治", years: "649—683", x: 405, y: 140 },
-      { id: "wu-zetian", rulerName: "武则天", label: "武则天", years: "690—705", x: 405, y: 300 },
-      { id: "li-xian", rulerName: "唐中宗李显", label: "李显", years: "两度在位", x: 610, y: 105 },
-      { id: "li-dan", rulerName: "唐睿宗李旦", label: "李旦", years: "两度在位", x: 610, y: 300 },
-      { id: "li-longji", rulerName: "唐玄宗李隆基", label: "李隆基", years: "712—756", x: 845, y: 300 },
-    ],
-    edges: [
-      { from: "li-yuan", to: "li-shimin", kind: "lineage", label: "父子", detail: "李世民是李渊次子，玄武门之变后成为皇太子并继位。" },
-      { from: "li-shimin", to: "li-zhi", kind: "lineage", label: "父子", detail: "李治是李世民第九子，贞观十七年被立为皇太子。" },
-      { from: "li-zhi", to: "wu-zetian", kind: "partnership", label: "夫妻", detail: "二人既是帝后，也在高宗后期形成共同处理政务的权力组合。", labelOffset: 20 },
-      { from: "li-zhi", to: "li-xian", kind: "lineage", label: "父子", detail: "李显是李治与武则天之子，两度即位。", labelOffset: -12 },
-      { from: "wu-zetian", to: "li-xian", kind: "lineage", label: "母子", detail: "武则天曾废黜李显，晚年又由李显复位，亲缘与皇权长期冲突。", labelOffset: -16 },
-      { from: "wu-zetian", to: "li-dan", kind: "lineage", label: "母子", detail: "李旦两次处在武则天主导的权力安排中。", labelOffset: 12 },
-      { from: "li-dan", to: "li-longji", kind: "lineage", label: "父子", detail: "李隆基协助父亲复位，后受禅登基。" },
-    ],
-  },
-  {
-    id: "early-ming",
-    eyebrow: "洪武至宣德",
-    title: "明初皇位分岔星图",
-    period: "1368—1435",
-    intro: "朱元璋的继承安排在祖孙与燕王一支之间分岔，靖难之役又重写了皇位传承线。",
-    nodes: [
-      { id: "zhu-yuanzhang", rulerName: "朱元璋", label: "朱元璋", years: "1368—1398", x: 120, y: 210 },
-      { id: "zhu-yunwen", rulerName: "朱允炆", label: "朱允炆", years: "1398—1402", x: 365, y: 90 },
-      { id: "zhu-di", rulerName: "朱棣", label: "朱棣", years: "1402—1424", x: 365, y: 315 },
-      { id: "zhu-gaochi", rulerName: "朱高炽", label: "朱高炽", years: "1424—1425", x: 610, y: 315 },
-      { id: "zhu-zhanji", rulerName: "朱瞻基", label: "朱瞻基", years: "1425—1435", x: 845, y: 315 },
-    ],
-    edges: [
-      { from: "zhu-yuanzhang", to: "zhu-yunwen", kind: "lineage", label: "祖孙继承", detail: "太子朱标早逝后，朱元璋立朱标之子朱允炆为皇太孙。", labelOffset: -12 },
-      { from: "zhu-yuanzhang", to: "zhu-di", kind: "lineage", label: "父子", detail: "朱棣是朱元璋第四子，受封燕王。", labelOffset: 12 },
-      { from: "zhu-yunwen", to: "zhu-di", kind: "conflict", label: "叔侄 · 靖难", detail: "建文帝削藩后，燕王朱棣起兵，攻入南京并夺取皇位。", labelOffset: 22 },
-      { from: "zhu-di", to: "zhu-gaochi", kind: "lineage", label: "父子", detail: "朱高炽为朱棣长子，继位为明仁宗。" },
-      { from: "zhu-gaochi", to: "zhu-zhanji", kind: "lineage", label: "父子", detail: "朱瞻基继承父亲朱高炽的皇位，开启宣德时期。" },
-    ],
-  },
-  {
-    id: "early-qing",
-    eyebrow: "后金至嘉庆",
-    title: "清前期七代传承星链",
-    period: "1616—1820",
-    intro: "从后金汗位到清朝皇位，七代传承呈现父子主线，也包含皇太极由宗室推举与雍正继位争议。",
-    nodes: [
-      { id: "nurhaci", rulerName: "努尔哈赤", label: "努尔哈赤", years: "1616—1626", x: 85, y: 210 },
-      { id: "hong-taiji", rulerName: "皇太极", label: "皇太极", years: "1626—1643", x: 230, y: 105 },
-      { id: "shunzhi", rulerName: "顺治帝福临", label: "顺治", years: "1643—1661", x: 370, y: 260 },
-      { id: "kangxi", rulerName: "康熙帝玄烨", label: "康熙", years: "1661—1722", x: 510, y: 105 },
-      { id: "yongzheng", rulerName: "雍正帝胤禛", label: "雍正", years: "1722—1735", x: 650, y: 260 },
-      { id: "qianlong", rulerName: "乾隆帝弘历", label: "乾隆", years: "1735—1796", x: 790, y: 105 },
-      { id: "jiaqing", rulerName: "嘉庆帝颙琰", label: "嘉庆", years: "1796—1820", x: 930, y: 260 },
-    ],
-    edges: [
-      { from: "nurhaci", to: "hong-taiji", kind: "lineage", label: "父子 · 推举", detail: "努尔哈赤死后，皇太极在诸贝勒权力格局中被拥立。" },
-      { from: "hong-taiji", to: "shunzhi", kind: "lineage", label: "父子", detail: "皇太极猝逝后，幼子福临在宗室妥协中继位。" },
-      { from: "shunzhi", to: "kangxi", kind: "lineage", label: "父子", detail: "玄烨是顺治帝第三子，八岁即位。" },
-      { from: "kangxi", to: "yongzheng", kind: "lineage", label: "父子 · 争议", detail: "胤禛在长期储位竞争后继位，过程在后世产生诸多争论。" },
-      { from: "yongzheng", to: "qianlong", kind: "lineage", label: "父子 · 密储", detail: "弘历经秘密立储制度确定为继承人。" },
-      { from: "qianlong", to: "jiaqing", kind: "lineage", label: "父子 · 禅位", detail: "乾隆帝禅位于颙琰，但仍以太上皇身份掌握最高权力至去世。" },
-    ],
-  },
+  constellation(
+    { id: "xia", eraId: "xia", eyebrow: "早期国家", title: "夏后氏世系星链", period: "约前2070—前1600", intro: "传统文献中的夏代世系，从禹、启的权力转移，到少康复国与桀失国。" },
+    [["yu", "禹", "禹", "开国", 205], ["qi", "启", "启", "世袭转折", 105], ["taikang", "太康", "太康", "失国", 280], ["shaokang", "少康", "少康", "复国", 105], ["jie", "桀", "桀", "末代", 280]],
+    [[0, 1, "lineage", "父子", "传统记载中启继承禹，标志最高权力走向王族世袭。"], [1, 2, "lineage", "父子", "太康被列为启之子，其失国成为夏代早期权力危机的象征。"], [2, 3, "conflict", "宗族复国", "少康出自夏后氏支系，经过联盟与战争恢复夏政权。"], [3, 4, "lineage", "后续世系", "桀位于少康以后延续的夏后氏世系末端；中间多代在此折叠显示。"]],
+  ),
+  constellation(
+    { id: "shang", eraId: "shang", eyebrow: "青铜王朝", title: "商王迁都与中兴星链", period: "约前1600—前1046", intro: "商王位在兄终弟及与父子继承间变化；星谱选取开国、迁殷、中兴和末代节点。" },
+    [["tang", "汤", "汤", "开国"], ["taijia", "太甲", "太甲", "早期整顿"], ["pangeng", "盘庚", "盘庚", "迁殷"], ["wuding", "武丁", "武丁", "中兴"], ["diyi", "帝乙", "帝乙", "晚商"], ["dixin", "帝辛", "帝辛", "末代"]],
+    [[0, 1, "lineage", "祖孙", "太甲通常被记为商汤之孙。"], [1, 2, "lineage", "王族支系", "盘庚与太甲同属子姓商王族，中间多代采用兄弟与父子交替继承。"], [2, 3, "lineage", "叔侄支系", "武丁为盘庚之侄辈，继承迁殷后稳定的王权。"], [3, 4, "lineage", "后续世系", "帝乙出自武丁以后延续的商王世系。"], [4, 5, "lineage", "父子", "帝辛是帝乙之子，也是商代最后一位王。"]],
+  ),
+  constellation(
+    { id: "western-zhou", eraId: "western-zhou", eyebrow: "礼制与分封", title: "西周王室传承星链", period: "前1046—前771", intro: "从武王克商、成康之治，到厉宣复振和幽王失国，展示姬姓王室的关键传承节点。" },
+    [["wuwang", "周武王", "武王", "克商"], ["chengwang", "周成王", "成王", "周公辅政"], ["kangwang", "周康王", "康王", "成康之治"], ["liwang", "周厉王", "厉王", "出奔"], ["xuanwang", "周宣王", "宣王", "中兴"], ["youwang", "周幽王", "幽王", "西周末代"]],
+    [[0, 1, "lineage", "父子", "成王为武王之子，年少即位后由周公辅政。"], [1, 2, "lineage", "父子", "康王继承成王，后世合称成康之治。"], [2, 3, "lineage", "后续世系", "厉王出自康王以后延续的王室主线。"], [3, 4, "lineage", "父子", "宣王是厉王之子，在共和行政后恢复王政。"], [4, 5, "lineage", "父子", "幽王继承宣王，其统治结束于镐京陷落。"]],
+  ),
+  constellation(
+    { id: "eastern-zhou", eraId: "eastern-zhou", eyebrow: "春秋战国", title: "东周王权衰微星链", period: "前770—前256", intro: "周王室延续五百余年，但诸侯权力不断增长；星谱压缩显示王室关键节点。" },
+    [["pingwang", "周平王", "平王", "东迁洛邑"], ["huanwang", "周桓王", "桓王", "王郑交战"], ["xiangwang", "周襄王", "襄王", "诸侯护王"], ["weiliewang", "周威烈王", "威烈王", "三家列侯"], ["xianwang", "周显王", "显王", "战国中期"], ["nanwang", "周赧王", "赧王", "东周末代"]],
+    [[0, 1, "lineage", "祖孙", "桓王是平王之孙，王权已开始受到强大诸侯挑战。"], [1, 2, "lineage", "王室世系", "襄王出自同一姬姓王室，中间继承节点在此折叠。"], [2, 3, "lineage", "后续世系", "威烈王承继东周王统，并正式承认韩赵魏为诸侯。"], [3, 4, "lineage", "王室世系", "显王处于战国诸强竞争加速的阶段。"], [4, 5, "lineage", "后续世系", "赧王是东周最后一位天子，王畿最终被秦吞并。"]],
+  ),
+  constellation(
+    { id: "qin", eraId: "qin", eyebrow: "第一次大一统", title: "秦帝国三代星链", period: "前221—前207", intro: "秦始皇建立帝制后，继承安排被赵高、李斯等宫廷力量扭转，帝国两代而亡。" },
+    [["yingzheng", "秦始皇嬴政", "嬴政", "始皇帝"], ["huhai", "秦二世胡亥", "胡亥", "二世皇帝"], ["ziying", "秦王子婴", "子婴", "秦王"]],
+    [[0, 1, "lineage", "父子 · 矫诏", "胡亥为嬴政之子，在沙丘之变后通过矫诏继位。"], [1, 2, "conflict", "宗室接替", "赵高杀胡亥后拥立宗室子婴；子婴不再称皇帝。"]],
+  ),
+  constellation(
+    { id: "western-han", eraId: "western-han", eyebrow: "汉家奠基", title: "西汉主干与支系星谱", period: "前202—9", intro: "吕后临朝后的宗室改立、文景父子与武昭宣继承，共同塑造西汉皇位主线。" },
+    [["liubang", "汉高祖刘邦", "刘邦", "高祖"], ["liuying", "汉惠帝刘盈", "刘盈", "惠帝"], ["liuheng", "汉文帝刘恒", "刘恒", "文帝"], ["liqi", "汉景帝刘启", "刘启", "景帝"], ["liuche", "汉武帝刘彻", "刘彻", "武帝"], ["liufuling", "汉昭帝刘弗陵", "刘弗陵", "昭帝"], ["liuxun", "汉宣帝刘询", "刘询", "宣帝"]],
+    [[0, 1, "lineage", "父子", "刘盈是刘邦与吕后之子。"], [0, 2, "lineage", "父子 · 支系", "刘恒是刘邦之子，吕氏势力被清除后由代王入继大统。", 18], [2, 3, "lineage", "父子", "刘启继承文帝，延续文景之治。"], [3, 4, "lineage", "父子", "刘彻是景帝之子。"], [4, 5, "lineage", "父子", "刘弗陵为武帝幼子，由霍光等辅政。"], [5, 6, "lineage", "宗室支系", "昭帝无嗣，昌邑王被废后，武帝曾孙刘询入继。"]],
+  ),
+  constellation(
+    { id: "xin", eraId: "xin", eyebrow: "两汉之间", title: "新莽与更始赤眉对峙", period: "9—25", intro: "这不是一条家族继承线，而是新朝、绿林更始与赤眉政权争夺天下的冲突星图。" },
+    [["wangmang", "王莽", "王莽", "新朝"], ["liuxuan", "更始帝刘玄", "刘玄", "更始政权"], ["liupenzi", "刘盆子", "刘盆子", "赤眉政权"]],
+    [[0, 1, "conflict", "起兵推翻", "绿林军拥立汉宗室刘玄，更始军攻入长安后新朝覆亡。"], [1, 2, "conflict", "并立 · 攻伐", "赤眉军另立刘盆子，后攻入长安并推翻更始政权。"]],
+  ),
+  constellation(
+    { id: "eastern-han", eraId: "eastern-han", eyebrow: "汉室再兴", title: "东汉外戚宦官时代星链", period: "25—220", intro: "光武重建汉室后，幼帝增多使外戚与宦官反复进入权力核心。" },
+    [["liuxiu", "光武帝刘秀", "刘秀", "光武"], ["liuzhuang", "明帝刘庄", "刘庄", "明帝"], ["liuda", "章帝刘炟", "刘炟", "章帝"], ["liuzhao", "和帝刘肇", "刘肇", "和帝"], ["liuhu", "安帝刘祜", "刘祜", "安帝"], ["liuzhi", "桓帝刘志", "刘志", "桓帝"], ["liuxie", "献帝刘协", "刘协", "献帝"]],
+    [[0, 1, "lineage", "父子", "刘庄是刘秀之子。"], [1, 2, "lineage", "父子", "刘炟继承明帝。"], [2, 3, "lineage", "父子", "刘肇是章帝之子，幼年即位。"], [3, 4, "lineage", "宗室支系", "和帝无成年嗣子，安帝由宗室支系入继。"], [4, 5, "lineage", "宗室改立", "桓帝在外戚主导下由河间王支系入继。"], [5, 6, "lineage", "后续宗室", "献帝出自灵帝一支，是东汉最后一位皇帝。"]],
+  ),
+  constellation(
+    { id: "three-kingdoms", eraId: "three-kingdoms", eyebrow: "魏蜀吴并立", title: "三国开国与继承星图", period: "220—280", intro: "三条父子继承线并列展开，横向冲突线表示魏、蜀、吴之间长期战争。" },
+    [["caopi", "曹丕", "曹丕", "曹魏", 80], ["caorui", "曹叡", "曹叡", "曹魏", 80], ["liubei", "刘备", "刘备", "蜀汉", 205], ["liushan", "刘禅", "刘禅", "蜀汉", 205], ["sunquan", "孙权", "孙权", "孙吴", 330], ["sunliang", "孙亮", "孙亮", "孙吴", 330]],
+    [[0, 1, "lineage", "父子", "曹叡是曹丕之子。"], [2, 3, "lineage", "父子", "刘禅继承刘备的蜀汉政权。"], [4, 5, "lineage", "父子", "孙亮是孙权幼子，受遗诏继位。"], [0, 2, "conflict", "魏蜀对峙", "曹魏与蜀汉分别主张不同的天下合法性。", -14], [2, 4, "partnership", "蜀吴联盟", "蜀汉与孙吴时而联盟抗魏，时而因荆州发生冲突。", 14]],
+  ),
+  constellation(
+    { id: "jin", eraId: "jin", eyebrow: "统一与南渡", title: "两晋宗室迁移星谱", period: "266—420", intro: "西晋短暂统一后爆发宗室内战；晋室南渡，由琅琊王支系建立东晋。" },
+    [["simayan", "司马炎", "司马炎", "西晋武帝"], ["simazhong", "司马衷", "司马衷", "西晋惠帝"], ["simachi", "司马炽", "司马炽", "西晋怀帝"], ["simarui", "司马睿", "司马睿", "东晋元帝"], ["simashao", "司马绍", "司马绍", "东晋明帝"], ["simayao", "司马曜", "司马曜", "东晋孝武帝"]],
+    [[0, 1, "lineage", "父子", "司马衷是司马炎之子。"], [1, 2, "lineage", "兄弟", "怀帝司马炽是惠帝异母弟，在八王之乱后继位。"], [0, 3, "lineage", "宗室支系 · 南渡", "司马睿出自琅琊王支系，在建康建立东晋。", 22], [3, 4, "lineage", "父子", "司马绍继承司马睿。"], [4, 5, "lineage", "后续世系", "司马曜出自东晋皇室后续主线。"]],
+  ),
+  constellation(
+    { id: "sixteen-kingdoms", eraId: "sixteen-kingdoms", eyebrow: "北方多国并立", title: "十六国兴替代表星图", period: "304—439", intro: "十六国不是单一王朝世系；星谱选取关键政权创建者与分裂节点，展示征服和另立关系。" },
+    [["liuyuan", "刘渊", "刘渊", "汉赵", 80], ["shile", "石勒", "石勒", "后赵", 205], ["muronghuang", "慕容皝", "慕容皝", "前燕", 330], ["fujian", "苻坚", "苻坚", "前秦", 80], ["yaochang", "姚苌", "姚苌", "后秦", 205], ["murongchui", "慕容垂", "慕容垂", "后燕", 330]],
+    [[0, 1, "conflict", "部将另立", "石勒早期依附汉赵，后来建立后赵并与汉赵决裂。"], [1, 2, "conflict", "北方争霸", "后赵衰乱后，前燕成为北方重要政权。"], [2, 3, "conflict", "前秦统一北方", "苻坚时期前秦灭前燕，一度统一北方。"], [3, 4, "conflict", "淝水后分裂", "淝水战败后，姚苌脱离前秦建立后秦。"], [3, 5, "conflict", "旧燕复国", "慕容垂脱离前秦建立后燕，恢复慕容氏政权。", 22]],
+  ),
+  constellation(
+    { id: "northern-southern", eraId: "northern-southern", eyebrow: "南北对峙", title: "南朝禅代与北朝演变星图", period: "420—589", intro: "南朝多以权臣受禅更替，北朝则从北魏分裂走向北周；上下两条星带对应南北。" },
+    [["liuyu", "刘裕", "刘裕", "刘宋", 85], ["xiaodaocheng", "萧道成", "萧道成", "南齐", 85], ["xiaoyan", "萧衍", "萧衍", "梁", 85], ["chenbaxian", "陈霸先", "陈霸先", "陈", 85], ["tuobagui", "拓跋珪", "拓跋珪", "北魏", 315], ["yuanhong", "元宏", "元宏", "北魏孝文帝", 315], ["yuwenyong", "宇文邕", "宇文邕", "北周", 315]],
+    [[0, 1, "conflict", "权臣受禅", "萧道成取代刘宋建立南齐。"], [1, 2, "conflict", "权臣受禅", "萧衍取代南齐建立梁。"], [2, 3, "conflict", "权臣受禅", "陈霸先在梁末乱局中建立陈。"], [4, 5, "lineage", "后续世系", "元宏出自拓跋珪建立的北魏皇室，并推行汉化改革。"], [5, 6, "conflict", "分裂后禅代", "北魏分裂为东西魏，西魏权力最终转入宇文氏北周。"], [3, 6, "conflict", "南北对峙", "陈与北周处于南北政权竞争的后期阶段。", 18]],
+  ),
+  constellation(
+    { id: "sui", eraId: "sui", eyebrow: "再造统一", title: "隋朝父子与末世并立星图", period: "581—618", intro: "杨坚统一南北，杨广继位后天下大乱；三位末期宗室君主分别受不同势力拥立。" },
+    [["yangjian", "隋文帝杨坚", "杨坚", "文帝"], ["yangguang", "隋炀帝杨广", "杨广", "炀帝"], ["yangyou", "隋恭帝杨侑", "杨侑", "长安"], ["yanghao", "杨浩", "杨浩", "江都"], ["yangtong", "杨侗", "杨侗", "洛阳"]],
+    [[0, 1, "lineage", "父子", "杨广是杨坚次子，取代兄长杨勇成为太子后继位。"], [1, 2, "lineage", "祖孙 · 受拥", "李渊控制长安后拥立杨广之孙杨侑。"], [1, 3, "lineage", "宗室 · 受拥", "宇文化及在江都拥立秦王杨浩，旋即将其杀害。"], [1, 4, "lineage", "祖孙 · 受拥", "洛阳群臣拥立杨广之孙杨侗。"]],
+  ),
+  constellation(
+    { id: "tang", eraId: "tang", eyebrow: "唐与武周", title: "李唐与武周权力星群", period: "618—907", intro: "以唐初皇族为中心，并延伸至安史之乱后的父子传位，呈现唐代最关键的权力转折。" },
+    [["liyuan", "唐高祖李渊", "李渊", "高祖", 125], ["lishimin", "唐太宗李世民", "李世民", "太宗", 125], ["lizhi", "唐高宗李治", "李治", "高宗", 125], ["wuzetian", "武则天", "武则天", "武周", 300], ["lidan", "唐睿宗李旦", "李旦", "睿宗", 300], ["lilongji", "唐玄宗李隆基", "李隆基", "玄宗", 300], ["liheng", "唐肃宗李亨", "李亨", "肃宗", 125]],
+    [[0, 1, "lineage", "父子", "李世民是李渊次子，玄武门之变后继位。"], [1, 2, "lineage", "父子", "李治是李世民第九子。"], [2, 3, "partnership", "夫妻 · 共治", "高宗后期，武则天深度参与政务并最终建立武周。", 18], [3, 4, "lineage", "母子", "李旦两次处于武则天主导的皇位安排中。"], [4, 5, "lineage", "父子", "李隆基协助父亲复位，后来受禅登基。"], [5, 6, "lineage", "父子 · 战时继位", "安史之乱中李亨在灵武即位，玄宗成为太上皇。"]],
+  ),
+  constellation(
+    { id: "five-dynasties", eraId: "five-dynasties", eyebrow: "五代十国", title: "中原五代政权更替星图", period: "907—960", intro: "五代多由军事强人取代前朝，不是连续家族世系；后周的郭威与柴荣则有养亲继承关系。" },
+    [["zhuwen", "朱温", "朱温", "后梁"], ["licunxu", "李存勖", "李存勖", "后唐"], ["shijingtang", "石敬瑭", "石敬瑭", "后晋"], ["liuzhiyuan", "刘知远", "刘知远", "后汉"], ["guowei", "郭威", "郭威", "后周"], ["chairong", "柴荣", "柴荣", "后周"]],
+    [[0, 1, "conflict", "灭梁建唐", "李存勖灭后梁，建立后唐。"], [1, 2, "conflict", "借辽灭唐", "石敬瑭借契丹力量推翻后唐，建立后晋。"], [2, 3, "conflict", "后晋亡后建汉", "契丹灭后晋后，刘知远建立后汉。"], [3, 4, "conflict", "兵变代汉", "郭威在军变中取代后汉，建立后周。"], [4, 5, "lineage", "养亲 · 姨甥", "柴荣是郭威妻侄兼养子，继承后周皇位。"]],
+  ),
+  constellation(
+    { id: "liao", eraId: "liao", eyebrow: "契丹帝国", title: "辽朝皇位传承星链", period: "916—1125", intro: "辽朝皇位在太祖诸子支系间几度转换，萧氏后族也长期参与继承与摄政。" },
+    [["abaoji", "耶律阿保机", "阿保机", "太祖"], ["deguang", "耶律德光", "德光", "太宗"], ["ruan", "耶律阮", "阮", "世宗"], ["xian", "耶律贤", "贤", "景宗"], ["longxu", "耶律隆绪", "隆绪", "圣宗"], ["hongji", "耶律洪基", "洪基", "道宗"], ["yanxi", "耶律延禧", "延禧", "天祚帝"]],
+    [[0, 1, "lineage", "父子", "耶律德光是阿保机次子，在述律后支持下继位。"], [1, 2, "lineage", "叔侄 · 夺位", "耶律阮是阿保机长子耶律倍之子，在太宗死后被拥立。"], [2, 3, "lineage", "宗室支系", "耶律贤为耶律阮近支宗室后继。"], [3, 4, "lineage", "父子", "耶律隆绪幼年继位，承天太后萧绰摄政。"], [4, 5, "lineage", "后续世系", "耶律洪基出自圣宗一系。"], [5, 6, "lineage", "祖孙", "耶律延禧是道宗之孙，成为辽朝末代皇帝。"]],
+  ),
+  constellation(
+    { id: "northern-song", eraId: "northern-song", eyebrow: "文治帝国", title: "北宋兄终弟及与宗支星谱", period: "960—1127", intro: "宋太祖之后由弟赵光义继位，此后父子传承中夹杂养子入继与皇位支系转换。" },
+    [["zhaokuangyin", "宋太祖赵匡胤", "赵匡胤", "太祖"], ["zhaoguangyi", "宋太宗赵光义", "赵光义", "太宗"], ["zhaoheng", "宋真宗赵恒", "赵恒", "真宗"], ["zhaozhen", "宋仁宗赵祯", "赵祯", "仁宗"], ["zhaoshu", "宋英宗赵曙", "赵曙", "英宗"], ["zhaoxu", "宋神宗赵顼", "赵顼", "神宗"], ["zhaoji", "宋徽宗赵佶", "赵佶", "徽宗"], ["zhaohuan", "宋钦宗赵桓", "赵桓", "钦宗"]],
+    [[0, 1, "lineage", "兄弟", "赵光义是赵匡胤之弟，继承方式留下金匮之盟等争议叙事。"], [1, 2, "lineage", "父子", "赵恒是赵光义之子。"], [2, 3, "lineage", "父子", "赵祯继承真宗。"], [3, 4, "lineage", "宗室养子", "仁宗无子，濮王之子赵曙被接入宫中并继位。"], [4, 5, "lineage", "父子", "赵顼是英宗长子。"], [5, 6, "lineage", "宗室支系", "徽宗是神宗之子、哲宗之弟。"], [6, 7, "lineage", "父子 · 禅位", "金军南下时徽宗禅位于赵桓。"]],
+  ),
+  constellation(
+    { id: "western-xia", eraId: "western-xia", eyebrow: "党项王朝", title: "西夏父子与母党政治星链", period: "1038—1227", intro: "西夏多位幼主继位，梁氏等后族长期摄政；后期皇位在宗室支系间转换。" },
+    [["liyuanhao", "李元昊", "李元昊", "景宗"], ["liliangzuo", "李谅祚", "李谅祚", "毅宗"], ["libingchang", "李秉常", "李秉常", "惠宗"], ["liqianshun", "李乾顺", "李乾顺", "崇宗"], ["lirenxiao", "李仁孝", "李仁孝", "仁宗"], ["lizunxu", "李遵顼", "李遵顼", "神宗"], ["lixian", "李睍", "李睍", "末帝"]],
+    [[0, 1, "lineage", "父子 · 幼主", "李谅祚幼年继承李元昊，母党掌权。"], [1, 2, "lineage", "父子 · 幼主", "李秉常幼年继位，梁太后摄政。"], [2, 3, "lineage", "父子", "李乾顺继位初期同样受梁氏后族控制。"], [3, 4, "lineage", "父子", "李仁孝继承李乾顺，长期在位。"], [4, 5, "lineage", "宗室支系", "李遵顼出自宗室支系，通过宫廷政变继位。"], [5, 6, "lineage", "后续宗室", "李睍为西夏末代君主，蒙古围攻中投降。"]],
+  ),
+  constellation(
+    { id: "jin-dynasty", eraId: "jin-dynasty", eyebrow: "女真王朝", title: "金朝兄终弟及与宗支星谱", period: "1115—1234", intro: "金初实行兄弟与宗族继承，海陵王夺位后，世宗一支重新建立较稳定的父子祖孙主线。" },
+    [["aguda", "完颜阿骨打", "阿骨打", "太祖"], ["wanyangsheng", "完颜晟", "完颜晟", "太宗"], ["wanyandan", "完颜亶", "完颜亶", "熙宗"], ["wanyanliang", "完颜亮", "完颜亮", "海陵王"], ["wanyanyong", "完颜雍", "完颜雍", "世宗"], ["wanyanjing", "完颜璟", "完颜璟", "章宗"], ["wanyanshouxu", "完颜守绪", "完颜守绪", "哀宗"]],
+    [[0, 1, "lineage", "兄弟", "完颜晟是阿骨打之弟。"], [1, 2, "lineage", "叔祖孙支系", "熙宗完颜亶是阿骨打嫡长孙。"], [2, 3, "conflict", "堂兄夺位", "完颜亮杀熙宗后夺取皇位。"], [3, 4, "conflict", "宗室起兵", "完颜雍在海陵王南征时被拥立，成为金世宗。"], [4, 5, "lineage", "祖孙", "章宗是世宗之孙。"], [5, 6, "lineage", "后续宗支", "哀宗出自章宗以后转入的卫绍王支系，是金末主要皇帝。"]],
+  ),
+  constellation(
+    { id: "southern-song", eraId: "southern-song", eyebrow: "江南偏安", title: "南宋养子入继与末代星链", period: "1127—1279", intro: "高宗无存世亲子，以太祖后裔赵昚入继；宋末三位幼主在战乱中连续被拥立。" },
+    [["zhaogou", "宋高宗赵构", "赵构", "高宗"], ["zhaoshen", "宋孝宗赵昚", "赵昚", "孝宗"], ["zhaodun", "宋光宗赵惇", "赵惇", "光宗"], ["zhaokuo", "宋宁宗赵扩", "赵扩", "宁宗"], ["zhaoyun", "宋理宗赵昀", "赵昀", "理宗"], ["zhaoxian", "宋恭帝赵㬎", "赵㬎", "恭帝"], ["zhaoshi", "宋端宗赵昰", "赵昰", "端宗"], ["zhaobing", "宋末帝赵昺", "赵昺", "末帝"]],
+    [[0, 1, "lineage", "养子 · 太祖支系", "高宗选太祖后裔赵昚为养子并禅位。"], [1, 2, "lineage", "父子", "赵惇继承孝宗。"], [2, 3, "lineage", "父子", "赵扩继承光宗。"], [3, 4, "lineage", "宗室入继", "宁宗无子，赵昀由权臣史弥远拥立。"], [4, 5, "lineage", "后续世系", "恭帝出自理宗之后的度宗一支。"], [5, 6, "lineage", "兄弟 · 流亡", "临安陷落后，赵昰被南宋残余力量拥立。"], [6, 7, "lineage", "兄弟 · 流亡", "端宗去世后，其弟赵昺继位。"]],
+  ),
+  constellation(
+    { id: "yuan", eraId: "yuan", eyebrow: "大蒙古国的中国王朝", title: "元朝兄弟支系争位星谱", period: "1271—1368", intro: "忽必烈以后，皇位在真金诸子后裔间反复转换，兄弟继承、政变与复位频繁发生。" },
+    [["kublai", "忽必烈", "忽必烈", "世祖"], ["temur", "铁穆耳", "铁穆耳", "成宗"], ["haishan", "海山", "海山", "武宗"], ["ayur", "爱育黎拔力八达", "爱育黎拔力八达", "仁宗"], ["shidebala", "硕德八剌", "硕德八剌", "英宗"], ["yesun", "也孙铁木儿", "也孙铁木儿", "泰定帝"], ["tugh", "图帖睦尔", "图帖睦尔", "文宗"], ["togo", "妥懽帖睦尔", "妥懽帖睦尔", "顺帝"]],
+    [[0, 1, "lineage", "祖孙", "铁穆耳是忽必烈太子真金之子。"], [1, 2, "lineage", "宗室政变", "成宗无嗣后，海山兄弟在宫廷斗争中取得皇位。"], [2, 3, "lineage", "兄弟 · 约位", "海山去世后由弟爱育黎拔力八达继位。"], [3, 4, "lineage", "父子", "硕德八剌继承仁宗。"], [4, 5, "conflict", "宗支改立", "英宗遇刺后，晋王支系的也孙铁木儿被拥立。"], [5, 6, "conflict", "两都之战", "泰定帝死后，图帖睦尔一方在两都之战中获胜。"], [6, 7, "lineage", "侄辈入继", "妥懽帖睦尔是图帖睦尔兄长和世㻋之子。"]],
+  ),
+  constellation(
+    { id: "ming", eraId: "ming", eyebrow: "洪武至南明", title: "明代皇位分岔星图", period: "1368—1662", intro: "靖难之役、土木之变与“大礼议”都让皇位从既定主线转入旁支；星谱选取三次关键分岔。" },
+    [["zhuyuanzhang", "朱元璋", "朱元璋", "洪武"], ["zhuyunwen", "朱允炆", "朱允炆", "建文"], ["zhudi", "朱棣", "朱棣", "永乐"], ["zhuzhanji", "朱瞻基", "朱瞻基", "宣德"], ["zhuqizhen", "朱祁镇", "朱祁镇", "正统／天顺"], ["zhuqiyu", "朱祁钰", "朱祁钰", "景泰"], ["zhuyoutang", "朱祐樘", "朱祐樘", "弘治"], ["zhuhoucong", "朱厚熜", "朱厚熜", "嘉靖"]],
+    [[0, 1, "lineage", "祖孙继承", "太子朱标早逝后，朱元璋立朱允炆为皇太孙。"], [0, 2, "lineage", "父子", "朱棣是朱元璋第四子。", 18], [1, 2, "conflict", "叔侄 · 靖难", "朱棣发动靖难之役，夺取侄子朱允炆的皇位。", -18], [2, 3, "lineage", "祖孙", "朱瞻基是朱棣之孙，中间为明仁宗朱高炽。"], [3, 4, "lineage", "父子", "朱祁镇继承朱瞻基。"], [4, 5, "lineage", "兄弟 · 危机继位", "土木之变后，朱祁钰被拥立；朱祁镇后来复辟。"], [4, 6, "lineage", "后续世系", "朱祐樘是朱祁镇之孙。", 18], [6, 7, "lineage", "堂弟入继", "武宗无子，兴献王之子朱厚熜以旁支身份继位。"]],
+  ),
+  constellation(
+    { id: "qing", eraId: "qing", eyebrow: "后金至帝制终章", title: "清朝十二帝传承星链", period: "1616—1912", intro: "从八旗贵族拥立到秘密建储，再到慈禧主导的近支入继，展示清代皇位规则的变化。" },
+    [["nurhaci", "努尔哈赤", "努尔哈赤", "后金"], ["hongtaiji", "皇太极", "皇太极", "太宗"], ["fulin", "顺治帝福临", "顺治", "世祖"], ["xuanye", "康熙帝玄烨", "康熙", "圣祖"], ["yinzhen", "雍正帝胤禛", "雍正", "世宗"], ["hongli", "乾隆帝弘历", "乾隆", "高宗"], ["yiyan", "嘉庆帝颙琰", "嘉庆", "仁宗"], ["minning", "道光帝旻宁", "道光", "宣宗"], ["yizhu", "咸丰帝奕詝", "咸丰", "文宗"], ["puyi", "宣统帝溥仪", "宣统", "末帝"]],
+    [[0, 1, "lineage", "父子 · 推举", "努尔哈赤死后，皇太极在诸贝勒权力格局中被拥立。"], [1, 2, "lineage", "父子 · 宗室妥协", "皇太极猝逝后，幼子福临在宗室妥协中继位。"], [2, 3, "lineage", "父子", "玄烨是顺治帝第三子。"], [3, 4, "lineage", "父子 · 储位竞争", "胤禛在长期储位竞争后继位。"], [4, 5, "lineage", "父子 · 秘密建储", "弘历经秘密建储确定为继承人。"], [5, 6, "lineage", "父子 · 禅位", "乾隆禅位于颙琰，但仍以太上皇身份掌权。"], [6, 7, "lineage", "父子", "旻宁继承嘉庆帝。"], [7, 8, "lineage", "父子", "奕詝在道光帝晚年储位选择中胜出。"], [8, 9, "lineage", "近支入继", "同治、光绪均无嗣后，慈禧选择醇亲王系幼童溥仪入继；中间两帝在此折叠显示。"]],
+  ),
 ];

@@ -7,6 +7,76 @@ type Portrait = RulerProfile["portrait"];
  * the catalogue seed key so the image never depends on a display-name guess.
  */
 export const additionalRulerPortraits: Record<string, Portrait> = {
+  "western-han:汉昭帝刘弗陵": {
+    src: "/rulers/han-zhaodi.jpg",
+    alt: "汉昭帝刘弗陵后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的汉昭帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:HanZhaoDiLiuFuling.jpg",
+  },
+  "three-kingdoms:曹丕": {
+    src: "/rulers/cao-pi.jpg",
+    alt: "魏文帝曹丕后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的魏文帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Cao_Pi_Tang.jpg",
+  },
+  "three-kingdoms:刘备": {
+    src: "/rulers/liu-bei.jpg",
+    alt: "蜀汉昭烈帝刘备后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的蜀汉昭烈帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Liu_Bei_Tang.jpg",
+  },
+  "jin:司马炎": {
+    src: "/rulers/sima-yan.jpg",
+    alt: "晋武帝司马炎后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的晋武帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Jin_Wu_Di.jpg",
+  },
+  "northern-southern:陈蒨": {
+    src: "/rulers/chen-qian.jpg",
+    alt: "陈文帝陈蒨后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的陈文帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Chen_Wendi_Tang.jpg",
+  },
+  "northern-southern:陈伯宗": {
+    src: "/rulers/chen-bozong.jpg",
+    alt: "陈废帝陈伯宗后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的陈废帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Chen_Feidi_Tang.jpg",
+  },
+  "sui:隋炀帝杨广": {
+    src: "/rulers/sui-yangdi.jpg",
+    alt: "隋炀帝杨广后世绘像",
+    kind: "后世绘像",
+    credit: "唐代传阎立本《历代帝王图》中的隋炀帝理想化绘像，波士顿美术馆藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Sui_Yangdi_Tang.jpg",
+  },
+  "ming:朱瞻基": {
+    src: "/rulers/xuande.jpg",
+    alt: "明宣宗朱瞻基宫廷画像",
+    kind: "宫廷画像",
+    credit: "明宣宗坐像，南薰殿旧藏，台北故宫博物院藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Xuande_Emperor.jpg",
+  },
+  "ming:朱祐樘": {
+    src: "/rulers/hongzhi.jpg",
+    alt: "明孝宗朱祐樘宫廷画像",
+    kind: "宫廷画像",
+    credit: "明孝宗坐像，南薰殿旧藏，台北故宫博物院藏；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Portrait_assis_de_l%27empereur_Hongzhi.jpg",
+  },
+  "qing:宣统帝溥仪": {
+    src: "/rulers/xuantong.jpg",
+    alt: "宣统帝溥仪历史照片",
+    kind: "历史照片",
+    credit: "20世纪初溥仪礼服肖像，摄影者不详；Wikimedia Commons 公版",
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Xuantong.jpg",
+  },
   "three-kingdoms:孙权": {
     src: "/rulers/sun-quan.jpg",
     alt: "孙权后世绘像",

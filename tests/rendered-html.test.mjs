@@ -29,7 +29,8 @@ test("server-renders the history timeline and featured rulers", async () => {
   assert.match(readableHtml, /秦始皇/);
   assert.match(readableHtml, /君王档案馆/);
   assert.match(readableHtml, /帝王关系星谱/);
-  assert.match(readableHtml, /李唐与武周权力星群/);
+  assert.match(readableHtml, /夏后氏世系星链/);
+  assert.match(readableHtml, /覆盖全部 23 个历史时期/);
   assert.match(readableHtml, /全部 443 位/);
   assert.match(readableHtml, /找到 443 位/);
   assert.match(readableHtml, /暂无可靠传世画像/);
@@ -80,7 +81,7 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
     assert.match(page, new RegExp(criterion));
   }
 
-  assert.match(profiles, /宫廷画像|传世画像|后世绘像/);
+  assert.match(profiles, /宫廷画像|传世画像|后世绘像|历史照片/);
   assert.match(profiles, /code: "(?:ENTJ|ISTJ|ESTJ|ENFJ|INTJ|ENTP|ESTP|INFJ)"/);
   assert.match(profiles, /Wikimedia Commons 公版/);
   assert.doesNotMatch(catalog, /code: "待考"/);
@@ -95,20 +96,25 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
 
   const referencedPortraits = [profiles, portraitCatalog]
     .flatMap((source) => [...source.matchAll(/src: "\/rulers\/([^"/]+)"/g)].map((match) => match[1]));
-  assert.equal([...portraitCatalog.matchAll(/^  "[^"\n]+": \{/gm)].length, 7);
+  assert.equal([...portraitCatalog.matchAll(/^  "[^"\n]+": \{/gm)].length, 17);
   assert.match(portraitCatalog, /Wikimedia Commons 公版/);
   assert.equal(portraits.length, referencedPortraits.length);
   assert.deepEqual([...portraits].sort(), [...referencedPortraits].sort());
   assert.ok(portraits.every((name) => /\.(?:jpe?g|png)$/i.test(name)));
 
-  assert.equal([...constellations.matchAll(/^    id: "(?:early-tang|early-ming|early-qing)",$/gm)].length, 3);
-  assert.equal([...constellations.matchAll(/rulerName: "/g)].length, 19);
-  for (const [, rulerName] of constellations.matchAll(/rulerName: "([^"]+)"/g)) {
+  assert.equal([...constellations.matchAll(/^  constellation\(/gm)].length, 23);
+  const constellationEraIds = [...constellations.matchAll(/eraId: "([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(constellationEraIds.length, 23);
+  assert.equal(new Set(constellationEraIds).size, 23);
+  const constellationRulers = [...constellations.matchAll(/\["[^"]+", "([^"]+)", "[^"]+", "[^"]+"(?:, \d+)?\]/g)]
+    .map((match) => match[1]);
+  assert.ok(constellationRulers.length >= 120);
+  for (const rulerName of constellationRulers) {
     assert.ok(catalog.includes(rulerName), `${rulerName} 应对应君王档案馆中的真实条目`);
   }
-  assert.match(constellations, /kind: "lineage"/);
-  assert.match(constellations, /kind: "partnership"/);
-  assert.match(constellations, /kind: "conflict"/);
+  assert.match(constellations, /"lineage"/);
+  assert.match(constellations, /"partnership"/);
+  assert.match(constellations, /"conflict"/);
   assert.doesNotMatch(page, /<svg/);
 
   await access(new URL("../public/og.png", import.meta.url));

@@ -923,7 +923,7 @@ a:focus-visible {
   margin: 0;
 }
 
-.constellation-heading > p {
+.constellation-heading-copy > p {
   color: #bcb7ac;
   font-family: var(--serif);
   font-size: 16px;
@@ -931,12 +931,25 @@ a:focus-visible {
   margin: 0;
 }
 
+.constellation-heading-copy button {
+  background: transparent;
+  border: 0;
+  color: #d5ad72;
+  cursor: pointer;
+  font-size: 11px;
+  margin-top: 12px;
+  padding: 0;
+}
+
 .constellation-tabs {
-  display: grid;
+  display: flex;
   gap: 10px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 28px auto 18px;
   max-width: 1272px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-color: #8f704c #202423;
+  scroll-snap-type: x proximity;
 }
 
 .constellation-tabs button {
@@ -948,6 +961,8 @@ a:focus-visible {
   gap: 5px;
   min-height: 78px;
   padding: 14px 17px;
+  flex: 0 0 226px;
+  scroll-snap-align: start;
   text-align: left;
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
@@ -2216,9 +2231,7 @@ footer span {
   }
 
   .constellation-tabs {
-    display: flex;
     margin-right: -20px;
-    overflow-x: auto;
     padding-right: 20px;
     scrollbar-width: none;
   }
