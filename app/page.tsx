@@ -35,6 +35,11 @@ import {
   territoryTrendLabels,
   type RulerMapMoment,
 } from "./ruler-territory";
+import {
+  literaryFiguresByEra,
+  literaryFigureStats,
+  type LiteraryFigure,
+} from "./literary-figures";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const rulerProfileByName = new Map(allRulerProfiles.map((ruler) => [ruler.name, ruler]));
@@ -102,6 +107,35 @@ function getAtlasImageSliceStyle(layout: (typeof cultureRegionLayout)[number]): 
     top: `${(-top / height) * 100}%`,
     width: `${10000 / width}%`,
     height: `${10000 / height}%`,
+  };
+}
+
+const literaryMarkerOffsets = [
+  { x: 0.25, y: 0.3 },
+  { x: 0.7, y: 0.28 },
+  { x: 0.3, y: 0.72 },
+  { x: 0.72, y: 0.7 },
+  { x: 0.5, y: 0.5 },
+  { x: 0.5, y: 0.18 },
+] as const;
+
+function getLiteraryMarkerStyle(
+  figure: LiteraryFigure,
+  figures: LiteraryFigure[],
+  layouts: Array<(typeof cultureRegionLayout)[number]>,
+): CSSProperties {
+  const layout = layouts.find((item) => item.key === figure.regionKey)
+    ?? cultureRegionLayout.find((item) => item.key === figure.regionKey);
+  if (!layout) return { left: "50%", top: "50%" };
+
+  const peers = figures.filter((item) => item.regionKey === figure.regionKey);
+  const peerIndex = Math.max(0, peers.findIndex((item) => item.name === figure.name));
+  const offset = literaryMarkerOffsets[peerIndex % literaryMarkerOffsets.length];
+  const left = Number.parseFloat(layout.left) + Number.parseFloat(layout.width) * offset.x;
+  const top = Number.parseFloat(layout.top) + Number.parseFloat(layout.height) * offset.y;
+  return {
+    left: `${clamp(left, 4.5, 95.5)}%`,
+    top: `${clamp(top, 5, 94)}%`,
   };
 }
 
@@ -475,6 +509,41 @@ function RulerPortrait({ ruler, large = false }: { ruler: CatalogRulerProfile; l
   );
 }
 
+function LiteraryPortrait({
+  figure,
+  large = false,
+  decorative = false,
+}: {
+  figure: LiteraryFigure;
+  large?: boolean;
+  decorative?: boolean;
+}) {
+  if (figure.portrait.src) {
+    return (
+      <img
+        src={`${publicBasePath}${figure.portrait.src}`}
+        alt={decorative ? "" : figure.portrait.alt}
+        width={large ? 460 : 72}
+        height={large ? 560 : 72}
+        loading={large ? "eager" : "lazy"}
+        decoding="async"
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`literary-portrait-placeholder${large ? " literary-portrait-placeholder-large" : ""}`}
+      role={decorative ? undefined : "img"}
+      aria-label={decorative ? undefined : `${figure.name}暂无可靠传世画像`}
+      aria-hidden={decorative || undefined}
+    >
+      <b aria-hidden="true">{figure.name.replace(/《.*|（.*|\(.*/, "").slice(0, 1)}</b>
+      {large ? <small>暂无可靠传世画像<br />未采用现代想象图</small> : null}
+    </span>
+  );
+}
+
 function RulerTeaser({
   ruler,
   onOpen,
@@ -521,7 +590,9 @@ export default function Home() {
   const eraJumpRef = useRef<HTMLElement>(null);
   const eraButtonRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const literaryDialogRef = useRef<HTMLDialogElement>(null);
   const rulerOpenerRef = useRef<HTMLButtonElement | null>(null);
+  const literaryOpenerRef = useRef<HTMLButtonElement | null>(null);
   const panelRefs = useRef<Array<HTMLElement | null>>([]);
   const wheelSettleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragRef = useRef({
@@ -550,6 +621,8 @@ export default function Home() {
   const constellationDragRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
   const [constellationDragging, setConstellationDragging] = useState(false);
   const [selectedRuler, setSelectedRuler] = useState<CatalogRulerProfile | null>(null);
+  const [selectedLiteraryFigure, setSelectedLiteraryFigure] = useState<LiteraryFigure | null>(null);
+  const [atlasFiguresVisible, setAtlasFiguresVisible] = useState(true);
   const [rulerQuery, setRulerQuery] = useState("");
   const [rulerEra, setRulerEra] = useState("all");
   const [rulerPolity, setRulerPolity] = useState("all");
@@ -581,6 +654,7 @@ export default function Home() {
   const availableAtlasRegionKeys = Object.keys(activeMapRegions) as CultureRegionKey[];
   const resolvedAtlasRegionKey = activeMapRegions[atlasRegionKey] ? atlasRegionKey : availableAtlasRegionKeys[0];
   const activeAtlasRegion = resolvedAtlasRegionKey ? activeMapRegions[resolvedAtlasRegionKey] : undefined;
+  const activeLiteraryFigures = useMemo(() => literaryFiguresByEra[atlasEraId] ?? [], [atlasEraId]);
 
   const directoryPolities = rulerEra === "all" ? [] : (politiesForEra[rulerEra] ?? []);
   const filteredRulers = useMemo(() => {
@@ -665,6 +739,26 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const dialog = dialogRef.current;
+    if (selectedRuler && dialog && !dialog.open) {
+      dialog.querySelector<HTMLElement>(".ruler-dialog-shell")?.scrollTo({ top: 0 });
+      dialog.showModal();
+    }
+  }, [selectedRuler]);
+
+  useEffect(() => {
+    const dialog = literaryDialogRef.current;
+    if (selectedLiteraryFigure && dialog && !dialog.open) {
+      dialog.querySelector<HTMLElement>(".literary-dialog-shell")?.scrollTo({ top: 0 });
+      dialog.showModal();
+    }
+  }, [selectedLiteraryFigure]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dialog-open", Boolean(selectedRuler || selectedLiteraryFigure));
+    return () => document.documentElement.classList.remove("dialog-open");
+  }, [selectedRuler, selectedLiteraryFigure]);
+  useEffect(() => {
     const tabs = atlasEraTabsRef.current;
     const index = cultureAtlas.findIndex((entry) => entry.eraId === atlasEraId);
     const tab = atlasEraTabRefs.current[index];
@@ -676,18 +770,7 @@ export default function Home() {
     }
   }, [atlasEraId]);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (selectedRuler && dialog && !dialog.open) {
-      dialog.querySelector<HTMLElement>(".ruler-dialog-shell")?.scrollTo({ top: 0 });
-      dialog.showModal();
-    }
-  }, [selectedRuler]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dialog-open", Boolean(selectedRuler));
-    return () => document.documentElement.classList.remove("dialog-open");
-  }, [selectedRuler]);
+  
 
   useEffect(() => () => {
     if (wheelSettleRef.current) clearTimeout(wheelSettleRef.current);
@@ -813,6 +896,23 @@ export default function Home() {
     setSelectedRuler(ruler);
   };
 
+  const openLiteraryFigure = (figure: LiteraryFigure, opener: HTMLButtonElement) => {
+    literaryOpenerRef.current = opener;
+    if (activeMapRegions[figure.regionKey]) setAtlasRegionKey(figure.regionKey);
+    setSelectedLiteraryFigure(figure);
+  };
+
+  const closeLiteraryFigure = () => {
+    const dialog = literaryDialogRef.current;
+    if (dialog?.open) dialog.close();
+    else setSelectedLiteraryFigure(null);
+  };
+
+  const restoreLiteraryFocus = () => {
+    setSelectedLiteraryFigure(null);
+    requestAnimationFrame(() => literaryOpenerRef.current?.focus());
+  };
+
   const showRulerDirectory = (eraId = "all") => {
     setRulerEra(eraId);
     setRulerPolity("all");
@@ -826,6 +926,11 @@ export default function Home() {
   const selectAtlasEra = (eraId: string) => {
     const entry = cultureAtlasByEra[eraId];
     if (!entry) return;
+    if (literaryDialogRef.current?.open) {
+      literaryOpenerRef.current = null;
+      literaryDialogRef.current.close();
+    }
+    setSelectedLiteraryFigure(null);
     setAtlasEraId(eraId);
     setAtlasRulerId("");
     setAtlasRulerMoment("accession");
@@ -834,6 +939,11 @@ export default function Home() {
   };
 
   const showCultureAtlas = (eraId = currentEra.id, rulerId = "") => {
+    if (literaryDialogRef.current?.open) {
+      literaryOpenerRef.current = null;
+      literaryDialogRef.current.close();
+    }
+    setSelectedLiteraryFigure(null);
     const entry = cultureAtlasByEra[eraId];
     if (entry) {
       setAtlasEraId(eraId);
@@ -1366,6 +1476,19 @@ export default function Home() {
                 </div>
                 <em className="atlas-map-disclaimer">历史示意 · 非精确疆界</em>
               </div>
+              <div className="atlas-layer-toolbar">
+                <button
+                  type="button"
+                  className="atlas-figure-toggle"
+                  onClick={() => setAtlasFiguresVisible((visible) => !visible)}
+                  aria-pressed={atlasFiguresVisible}
+                  aria-controls="atlas-figure-layer atlas-figure-shortcuts"
+                >
+                  <span>名人画像 · {activeLiteraryFigures.length} 位</span>
+                  <small>{atlasFiguresVisible ? "地图显示中" : "已收起"}</small>
+                </button>
+                <em>本时期人物层 · 独立于君主三阶段版图</em>
+              </div>
               <div
                 className={`atlas-map${activeAtlasMapAsset ? " has-image-base" : ""}`}
                 role="group"
@@ -1424,8 +1547,47 @@ export default function Home() {
                     </button>
                   );
                 })}
-                {activeAtlasMapAsset ? <span className="atlas-map-action-hint" aria-hidden="true">指向预览 · 轻点锁定</span> : null}
+                {atlasFiguresVisible ? (
+                  <ol id="atlas-figure-layer" className="atlas-figure-layer" aria-label={`${activeAtlasEra.name}名人画像`}>
+                    {activeLiteraryFigures.map((figure) => (
+                      <li
+                        key={`${figure.eraId}:${figure.name}`}
+                        style={getLiteraryMarkerStyle(figure, activeLiteraryFigures, activeAtlasRegionLayout)}
+                      >
+                        <button
+                          className="atlas-figure-marker"
+                          type="button"
+                          aria-haspopup="dialog"
+                          aria-label={`查看${figure.name}：${figure.identity}，${figure.placeLabel}`}
+                          onClick={(event) => openLiteraryFigure(figure, event.currentTarget)}
+                        >
+                          <span className="atlas-figure-marker-portrait"><LiteraryPortrait figure={figure} decorative /></span>
+                          <span className="atlas-figure-marker-name">{figure.name.replace(/（.*$/, "")}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                ) : null}
+                {activeAtlasMapAsset ? <span className="atlas-map-action-hint" aria-hidden="true">区域可点 · 画像可开</span> : null}
               </div>
+              {atlasFiguresVisible ? (
+                <div id="atlas-figure-shortcuts" className="atlas-figure-shortcuts" role="group" aria-label={`${activeAtlasEra.name}名人快捷选择`}>
+                  {activeLiteraryFigures.map((figure) => (
+                    <button
+                      key={`${figure.eraId}:${figure.name}:shortcut`}
+                      type="button"
+                      onClick={(event) => openLiteraryFigure(figure, event.currentTarget)}
+                      aria-haspopup="dialog"
+                    >
+                      <span className="atlas-figure-shortcut-portrait"><LiteraryPortrait figure={figure} decorative /></span>
+                      <span>
+                        <strong>{figure.name}</strong>
+                        <small>{figure.placeLabel}</small>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               {activeAtlasMapAsset ? (
                 <div className="atlas-region-shortcuts" role="group" aria-label={`${selectedAtlasRuler ? `${selectedAtlasRuler.name}版图` : `${activeAtlasEra.name}文化地图`}区域快捷选择`}>
                   {activeAtlasRegionLayout.map((layout) => {
@@ -1797,6 +1959,79 @@ export default function Home() {
       </section>
 
       <dialog
+        ref={literaryDialogRef}
+        className="literary-dialog"
+        aria-labelledby={selectedLiteraryFigure ? "literary-dialog-title" : undefined}
+        aria-describedby={selectedLiteraryFigure ? "literary-dialog-description" : undefined}
+        onCancel={(event) => {
+          event.preventDefault();
+          closeLiteraryFigure();
+        }}
+        onClose={restoreLiteraryFocus}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) closeLiteraryFigure();
+        }}
+      >
+        {selectedLiteraryFigure ? (
+          <div className="literary-dialog-shell">
+            <button className="dialog-close" type="button" onClick={closeLiteraryFigure} aria-label="关闭名人卡片">
+              <span aria-hidden="true">×</span>
+              关闭
+            </button>
+
+            <figure className="literary-portrait-large">
+              <LiteraryPortrait figure={selectedLiteraryFigure} large />
+              <figcaption>
+                <span>{selectedLiteraryFigure.portrait.reliability}</span>
+                {selectedLiteraryFigure.portrait.sourceUrl ? (
+                  <a href={selectedLiteraryFigure.portrait.sourceUrl} target="_blank" rel="noreferrer">画像来源 ↗</a>
+                ) : <small>{selectedLiteraryFigure.portrait.note}</small>}
+              </figcaption>
+            </figure>
+
+            <article className="literary-profile">
+              <p className="literary-profile-kicker">{activeAtlasEra.name} · 名人身份卡</p>
+              <h2 id="literary-dialog-title">{selectedLiteraryFigure.name}</h2>
+              <p className="literary-identity" id="literary-dialog-description">
+                {selectedLiteraryFigure.years} · {selectedLiteraryFigure.identity}
+              </p>
+              <p className="literary-brief">{selectedLiteraryFigure.brief}</p>
+
+              <dl className="literary-facts">
+                <div><dt>地图位置</dt><dd>{selectedLiteraryFigure.placeLabel}</dd></div>
+                <div><dt>定位依据</dt><dd>{selectedLiteraryFigure.locationBasis}</dd></div>
+                <div><dt>史料可信度</dt><dd>{selectedLiteraryFigure.evidenceLevel}</dd></div>
+              </dl>
+
+              <section className="literary-works" aria-label="代表作">
+                <h3>代表作</h3>
+                <div>
+                  {selectedLiteraryFigure.works.map((work) => (
+                    <article key={work.title}>
+                      <strong>{work.title}</strong>
+                      {work.note ? <p>{work.note}</p> : null}
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="literary-evidence">
+                <h3>放在地图上的原因</h3>
+                <p>{selectedLiteraryFigure.evidenceNote}</p>
+                <p>画像说明：{selectedLiteraryFigure.portrait.note}</p>
+              </section>
+
+              <div className="literary-source-links" aria-label="资料依据">
+                {selectedLiteraryFigure.sourceUrls.map((url, index) => (
+                  <a key={url} href={url} target="_blank" rel="noreferrer">资料依据 {index + 1} ↗</a>
+                ))}
+              </div>
+            </article>
+          </div>
+        ) : null}
+      </dialog>
+
+      <dialog
         ref={dialogRef}
         className="ruler-dialog"
         aria-labelledby={selectedRuler ? "ruler-dialog-title" : undefined}
@@ -1957,7 +2192,7 @@ export default function Home() {
 
       <footer>
         <p>历史并非一条笔直的线，而是制度、战争、财政、人物与环境交织而成的长卷。</p>
-        <span>MBTI 为基于史料行为、兴趣与关系的候选推演；古代画像不等同于真实照片</span>
+        <span>MBTI 为基于史料行为、兴趣与关系的候选推演；名人画像层共 {literaryFigureStats.total} 位，古代画像不等同于真实照片</span>
       </footer>
     </main>
   );

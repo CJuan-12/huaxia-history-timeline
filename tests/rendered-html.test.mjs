@@ -241,6 +241,45 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
   await access(new URL("../public/atlas/xia-cultural-map-v1.webp", import.meta.url));
 });
 
+
+test("places literary figures and portraits on the cultural atlas", async () => {
+  const [page, figures] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/literary-figures.ts", import.meta.url), "utf8"),
+  ]);
+
+  const erasBlock = page.match(/const eras: Era\[\] = \[([\s\S]*?)\n\];/)?.[1] ?? "";
+  const timelineEraIds = [...erasBlock.matchAll(/^    id: "([^"]+)",/gm)].map((match) => match[1]);
+  const figureEraIds = [...figures.matchAll(/^    eraId: "([^"]+)",/gm)].map((match) => match[1]);
+  const uniqueFigureEraIds = [...new Set(figureEraIds)];
+
+  assert.equal(timelineEraIds.length, 23);
+  assert.equal(uniqueFigureEraIds.length, 23);
+  assert.deepEqual([...uniqueFigureEraIds].sort(), [...timelineEraIds].sort());
+  assert.ok(figureEraIds.length >= 60, "literary layer should cover a broad cross-section of figures");
+  assert.ok([...figures.matchAll(/works: \[/g)].length >= figureEraIds.length);
+  assert.ok([...figures.matchAll(/sourceUrls: \[/g)].length >= figureEraIds.length);
+  assert.match(figures, /未采用现代想象图/);
+  assert.match(figures, /本页尚未采用未经逐件核验的图像/);
+
+  assert.match(page, /literaryFiguresByEra/);
+  assert.match(page, /atlasFiguresVisible/);
+  assert.match(page, /id="atlas-figure-layer"/);
+  assert.match(page, /className="atlas-figure-marker"/);
+  assert.match(page, /id="atlas-figure-shortcuts"/);
+  assert.match(page, /className="literary-dialog"/);
+  assert.match(page, /aria-haspopup="dialog"/);
+  assert.match(page, /本时期人物层 · 独立于君主三阶段版图/);
+  assert.match(page, /名人画像层共 \{literaryFigureStats\.total\} 位/);
+
+  const remoteImageRefs = [...figures.matchAll(/src: "https?:\/\//g)];
+  assert.equal(remoteImageRefs.length, 0, "figure portraits should use local files only");
+  const localPortraits = [...figures.matchAll(/src: "(\/(?:figures|rulers)\/[^"/]+)"/g)].map((match) => match[1]);
+  assert.ok(localPortraits.length >= 4, "at least the verified first-batch portraits should be visible");
+  for (const src of localPortraits) {
+    await access(new URL(`../public${src}`, import.meta.url));
+  }
+});
 test("resolves ruler territory through 66 polity baselines and three same-polity stages", async () => {
   const [page, territory, catalog, atlas] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
