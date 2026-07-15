@@ -148,6 +148,67 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   await assert.rejects(access(new URL("app/_sites-preview/", root)));
 });
 
+test("keeps the 23-period cultural atlas complete, sourced, and reachable from the UI", async () => {
+  const [page, atlas] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/culture-atlas.ts", import.meta.url), "utf8"),
+  ]);
+
+  const erasBlock = page.match(/const eras: Era\[\] = \[([\s\S]*?)\n\];/)?.[1] ?? "";
+  const timelineEraIds = [...erasBlock.matchAll(/^    id: "([^"]+)",/gm)].map((match) => match[1]);
+  const atlasEraMatches = [...atlas.matchAll(/^    eraId: "([^"]+)",/gm)];
+  const atlasEraIds = atlasEraMatches.map((match) => match[1]);
+
+  assert.equal(timelineEraIds.length, 23, "timeline should continue to define exactly 23 periods");
+  assert.equal(new Set(timelineEraIds).size, 23, "timeline period ids should be unique");
+  assert.equal(atlasEraIds.length, 23, "cultural atlas should define exactly one entry per period");
+  assert.equal(new Set(atlasEraIds).size, 23, "cultural atlas period ids should be unique");
+  assert.deepEqual([...atlasEraIds].sort(), [...timelineEraIds].sort());
+
+  const legalStatuses = new Set(["core", "controlled", "exchange", "rival", "uncertain"]);
+  const declaredStatuses = [...atlas.matchAll(/region\("([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(declaredStatuses.length >= 23, "every atlas entry should expose at least one interactive region");
+  assert.ok(declaredStatuses.every((status) => legalStatuses.has(status)), "atlas regions should use only documented statuses");
+
+  for (let index = 0; index < atlasEraMatches.length; index += 1) {
+    const start = atlasEraMatches[index].index;
+    const end = atlasEraMatches[index + 1]?.index ?? atlas.indexOf("\n];", start);
+    const entry = atlas.slice(start, end);
+    const eraId = atlasEraMatches[index][1];
+
+    for (const field of ["atmosphere", "culture", "customs", "routes"]) {
+      const values = entry.match(new RegExp(`${field}: \\[([^\\]]+)\\]`))?.[1] ?? "";
+      assert.match(values, /"[^"]+"/, `${eraId} should include non-empty ${field} notes`);
+    }
+    assert.match(entry, /phases: \{\s*early: "[^"]+",\s*middle: "[^"]+",\s*late: "[^"]+"\s*\}/, `${eraId} should cover early, middle, and late phases`);
+    assert.match(entry, /regions: \{[\s\S]*?region\("(?:core|controlled|exchange|rival|uncertain)"/, `${eraId} should include a mapped region`);
+  }
+
+  const sourceBlock = atlas.match(/export const cultureAtlasSources = \[([\s\S]*?)\n\];/)?.[1] ?? "";
+  const sourceUrls = [...sourceBlock.matchAll(/url: "([^"]+)"/g)].map((match) => match[1]);
+  assert.ok(sourceUrls.length >= 10, "atlas should retain a useful official-source bibliography");
+  assert.equal(new Set(sourceUrls).size, sourceUrls.length, "atlas source links should not be duplicated");
+  assert.ok(sourceUrls.every((url) => url.startsWith("https://")));
+  for (const officialHost of ["www.chnmuseum.cn", "whc.unesco.org", "www.dpm.org.cn"]) {
+    assert.ok(sourceUrls.some((url) => new URL(url).hostname === officialHost), `missing official source host: ${officialHost}`);
+  }
+
+  assert.match(page, /id="culture-atlas"/);
+  assert.match(page, /showCultureAtlas/);
+  assert.match(page, /rulersByEra\[atlasEraId\]/);
+  assert.match(page, /cultureRegionLayout\.map/);
+  const regionMapStart = page.indexOf("{cultureRegionLayout.map");
+  const regionMapBlock = page.slice(regionMapStart, page.indexOf("</div>", regionMapStart));
+  assert.ok(regionMapStart >= 0, "page should render the atlas region layout");
+  assert.match(regionMapBlock, /<button/);
+  assert.match(regionMapBlock, /disabled=\{!regionData\}/);
+  assert.match(regionMapBlock, /aria-pressed=\{isActive\}/);
+  assert.match(page, /\u6587\u5316\u7248\u56fe/);
+  assert.match(page, /\u671d\u4ee3\u603b\u89c8/);
+  assert.match(page, /\u5386\u53f2\u793a\u610f/);
+  assert.doesNotMatch(page, /<svg/);
+});
+
 test("catalogues every ruler in the 23-part timeline without duplicate restoration cards", async () => {
   const catalog = await readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8");
   const groups = [...catalog.matchAll(/\{ eraId: "([^"]+)", polity: "([^"]+)", rulers: "([^"]+)" \}/g)]

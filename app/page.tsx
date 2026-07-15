@@ -20,6 +20,13 @@ import {
   type CatalogRulerProfile,
 } from "./ruler-catalog";
 import { rulerConstellations } from "./ruler-constellations";
+import {
+  cultureAtlas,
+  cultureAtlasByEra,
+  cultureAtlasSources,
+  cultureRegionLayout,
+  type CultureRegionKey,
+} from "./culture-atlas";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const rulerProfileByName = new Map(allRulerProfiles.map((ruler) => [ruler.name, ruler]));
@@ -42,6 +49,32 @@ type Era = {
   fall: string;
   events: EventItem[];
 };
+
+type AtlasPhase = "early" | "middle" | "late";
+
+const atlasPhaseLabels: Record<AtlasPhase, string> = {
+  early: "政权前段",
+  middle: "政权中段",
+  late: "政权后段",
+};
+
+const atlasStatusLabels = {
+  core: "长期核心",
+  controlled: "一般控制",
+  exchange: "文化交流",
+  rival: "并立／争夺",
+  uncertain: "材料不确定",
+} as const;
+
+function getRulerAtlasPhase(ruler: CatalogRulerProfile, profiles: CatalogRulerProfile[]): AtlasPhase {
+  const peers = profiles.filter((profile) => profile.polity === ruler.polity);
+  const index = Math.max(0, peers.findIndex((profile) => profile.id === ruler.id));
+  if (peers.length <= 1) return "middle";
+  const ratio = index / (peers.length - 1);
+  if (ratio <= 1 / 3) return "early";
+  if (ratio < 2 / 3) return "middle";
+  return "late";
+}
 
 const mbtiCriteria = [
   { key: "E / I", title: "互动取向", text: "比较公开动员、边互动边判断，与独处反思、小范围深谈；朝会和出征本身不直接算 E。" },
@@ -471,7 +504,13 @@ export default function Home() {
   });
   const [current, setCurrent] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const [activeSection, setActiveSection] = useState<"timeline" | "constellation" | "archive">("timeline");
+  const [activeSection, setActiveSection] = useState<"timeline" | "atlas" | "constellation" | "archive">("timeline");
+  const atlasRef = useRef<HTMLElement>(null);
+  const atlasEraTabsRef = useRef<HTMLDivElement>(null);
+  const atlasEraTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const [atlasEraId, setAtlasEraId] = useState(eras[0].id);
+  const [atlasRulerId, setAtlasRulerId] = useState("");
+  const [atlasRegionKey, setAtlasRegionKey] = useState<CultureRegionKey>("heartland");
   const directoryRef = useRef<HTMLElement>(null);
   const constellationRef = useRef<HTMLElement>(null);
   const constellationTabsRef = useRef<HTMLDivElement>(null);
@@ -489,6 +528,15 @@ export default function Home() {
 
   const currentEra = eras[current];
   const activeConstellation = rulerConstellations.find((item) => item.id === constellationId) ?? rulerConstellations[0];
+  const activeAtlas = cultureAtlasByEra[atlasEraId] ?? cultureAtlas[0];
+  const activeAtlasEra = eras.find((era) => era.id === atlasEraId) ?? eras[0];
+  const atlasRulers = rulersByEra[atlasEraId] ?? [];
+  const selectedAtlasRuler = atlasRulers.find((ruler) => ruler.id === atlasRulerId) ?? null;
+  const selectedAtlasRulerIndex = selectedAtlasRuler ? atlasRulers.findIndex((ruler) => ruler.id === selectedAtlasRuler.id) : -1;
+  const atlasPhase = selectedAtlasRuler ? getRulerAtlasPhase(selectedAtlasRuler, atlasRulers) : null;
+  const availableAtlasRegionKeys = Object.keys(activeAtlas.regions) as CultureRegionKey[];
+  const resolvedAtlasRegionKey = activeAtlas.regions[atlasRegionKey] ? atlasRegionKey : availableAtlasRegionKeys[0];
+  const activeAtlasRegion = resolvedAtlasRegionKey ? activeAtlas.regions[resolvedAtlasRegionKey] : undefined;
 
   const directoryPolities = rulerEra === "all" ? [] : (politiesForEra[rulerEra] ?? []);
   const filteredRulers = useMemo(() => {
@@ -550,9 +598,18 @@ export default function Home() {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
         const marker = 150;
+        const atlasTop = atlasRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
         const constellationTop = constellationRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
         const archiveTop = directoryRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
-        setActiveSection(archiveTop <= marker ? "archive" : constellationTop <= marker ? "constellation" : "timeline");
+        setActiveSection(
+          archiveTop <= marker
+            ? "archive"
+            : constellationTop <= marker
+              ? "constellation"
+              : atlasTop <= marker
+                ? "atlas"
+                : "timeline",
+        );
       });
     };
     window.addEventListener("scroll", updateActiveSection, { passive: true });
@@ -562,6 +619,18 @@ export default function Home() {
       cancelAnimationFrame(frame);
     };
   }, []);
+
+  useEffect(() => {
+    const tabs = atlasEraTabsRef.current;
+    const index = cultureAtlas.findIndex((entry) => entry.eraId === atlasEraId);
+    const tab = atlasEraTabRefs.current[index];
+    if (tabs && tab) {
+      tabs.scrollTo({
+        left: Math.max(0, tab.offsetLeft - tabs.clientWidth / 2 + tab.offsetWidth / 2),
+        behavior: "smooth",
+      });
+    }
+  }, [atlasEraId]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -708,6 +777,41 @@ export default function Home() {
     requestAnimationFrame(() => {
       directoryRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  };
+
+  const selectAtlasEra = (eraId: string) => {
+    const entry = cultureAtlasByEra[eraId];
+    if (!entry) return;
+    setAtlasEraId(eraId);
+    setAtlasRulerId("");
+    const firstRegion = Object.keys(entry.regions)[0] as CultureRegionKey | undefined;
+    if (firstRegion) setAtlasRegionKey(firstRegion);
+  };
+
+  const showCultureAtlas = (eraId = currentEra.id, rulerId = "") => {
+    const entry = cultureAtlasByEra[eraId];
+    if (entry) {
+      setAtlasEraId(eraId);
+      setAtlasRulerId(rulerId);
+      const firstRegion = Object.keys(entry.regions)[0] as CultureRegionKey | undefined;
+      if (firstRegion) setAtlasRegionKey(firstRegion);
+    }
+    if (dialogRef.current?.open) {
+      rulerOpenerRef.current = null;
+      setSelectedRuler(null);
+      dialogRef.current.close();
+    }
+    requestAnimationFrame(() => {
+      atlasRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
+  const stepAtlasRuler = (direction: -1 | 1) => {
+    if (!atlasRulers.length) return;
+    const nextIndex = selectedAtlasRulerIndex < 0
+      ? direction > 0 ? 0 : atlasRulers.length - 1
+      : clamp(selectedAtlasRulerIndex + direction, 0, atlasRulers.length - 1);
+    setAtlasRulerId(atlasRulers[nextIndex].id);
   };
 
   const showConstellation = (eraId: string) => {
@@ -860,6 +964,7 @@ export default function Home() {
         </a>
         <nav className="topbar-nav" aria-label="页面快速导航">
           <button type="button" className={activeSection === "timeline" ? "active" : ""} onClick={showTimeline} aria-current={activeSection === "timeline" ? "page" : undefined}>时间轴</button>
+          <button type="button" className={activeSection === "atlas" ? "active" : ""} onClick={() => showCultureAtlas(currentEra.id)} aria-current={activeSection === "atlas" ? "page" : undefined}>文化版图</button>
           <button type="button" className={activeSection === "constellation" ? "active" : ""} onClick={() => showConstellation(currentEra.id)} aria-current={activeSection === "constellation" ? "page" : undefined}>关系星谱</button>
           <button type="button" className={activeSection === "archive" ? "active" : ""} onClick={() => showRulerDirectory(rulerEra)} aria-current={activeSection === "archive" ? "page" : undefined}>君王档案</button>
         </nav>
@@ -874,7 +979,7 @@ export default function Home() {
         <p className="eyebrow">从夏商周到帝制终章</p>
         <h1 id="page-title">沿着时间，横向展开中国古代史</h1>
         <p className="hero-copy">
-          拖动时间轴，或者使用鼠标滚轮与左右方向键穿行于朝代之间。展开大事记，也可以进入君王档案馆，查看全部 {catalogStats.total} 位在位君主的关系行为与 MBTI 候选分析。
+          拖动时间轴穿行于朝代之间，展开大事记；也可以进入文化版图和君王档案馆，查看地域风气、生活习俗，以及全部 {catalogStats.total} 位在位君主的关系行为与 MBTI 候选分析。
         </p>
         <button className="archive-entry" type="button" onClick={() => showRulerDirectory()}>
           <span>君王档案馆</span>
@@ -885,6 +990,7 @@ export default function Home() {
           <span>滚轮浏览</span>
           <span>左右键切换</span>
           <span>卡片点击展开</span>
+          <span>地图地域可点</span>
           <span>{catalogStats.mbtiInferred} 份 MBTI 候选</span>
           <span>{catalogStats.withPortrait} 幅已核验画像</span>
         </div>
@@ -1013,9 +1119,14 @@ export default function Home() {
                       其余君主：{rulersByEra[era.id].filter((ruler) => !(featuredRulersByEra[era.id] ?? []).some((featured) => featured.id === ruler.id)).slice(0, 6).map((ruler) => ruler.name).join("、")}
                       {rulersByEra[era.id].length > 8 ? "等" : ""}
                     </p>
-                    <button type="button" onClick={() => showRulerDirectory(era.id)}>
-                      查看本期全部 {rulersByEra[era.id].length} 位 →
-                    </button>
+                    <div className="era-ruler-actions">
+                      <button type="button" onClick={() => showCultureAtlas(era.id)}>
+                        查看本期文化版图 →
+                      </button>
+                      <button type="button" onClick={() => showRulerDirectory(era.id)}>
+                        查看本期全部 {rulersByEra[era.id].length} 位 →
+                      </button>
+                    </div>
                   </div>
                 </section>
               ) : null}
@@ -1043,6 +1154,222 @@ export default function Home() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section ref={atlasRef} id="culture-atlas" className="culture-atlas-section" aria-labelledby="culture-atlas-title">
+        <div className="atlas-heading">
+          <div>
+            <p>CULTURAL ATLAS</p>
+            <h2 id="culture-atlas-title">朝代文化版图</h2>
+          </div>
+          <div className="atlas-heading-copy">
+            <p>
+              把疆域层级、交流通道和生活风物放在同一张示意图上。先选历史时期，再切到任一君主的在位观察切片；分裂时代仍会保留同期政权，而不是把它们抹成一块颜色。
+            </p>
+            <button type="button" onClick={() => selectAtlasEra(currentEra.id)}>
+              定位到正在浏览的「{currentEra.name}」→
+            </button>
+          </div>
+        </div>
+
+        <div
+          ref={atlasEraTabsRef}
+          className="atlas-era-tabs"
+          role="tablist"
+          aria-label="横向滑动选择文化版图时期"
+        >
+          {cultureAtlas.map((entry, index) => {
+            const era = eras.find((item) => item.id === entry.eraId);
+            return (
+              <button
+                key={entry.eraId}
+                ref={(node) => { atlasEraTabRefs.current[index] = node; }}
+                id={`atlas-tab-${entry.eraId}`}
+                type="button"
+                role="tab"
+                aria-selected={entry.eraId === atlasEraId}
+                aria-controls="culture-atlas-panel"
+                className={entry.eraId === atlasEraId ? "active" : ""}
+                onClick={() => selectAtlasEra(entry.eraId)}
+              >
+                <strong>{era?.name ?? entry.eraId}</strong>
+                <small>{entry.scope}</small>
+              </button>
+            );
+          })}
+        </div>
+
+        <article
+          id="culture-atlas-panel"
+          className="atlas-overview"
+          role="tabpanel"
+          aria-labelledby={`atlas-tab-${atlasEraId}`}
+        >
+          <header className="atlas-overview-top">
+            <div>
+              <span>{activeAtlasEra.phase} · {activeAtlas.scope}</span>
+              <h3>{activeAtlasEra.name} · 风物与空间</h3>
+              <p className="atlas-overview-copy">{activeAtlas.summary}</p>
+            </div>
+            <dl>
+              <div><dt>观察中心</dt><dd>{activeAtlas.capital}</dd></div>
+              <div><dt>范围可信度</dt><dd><em className={`atlas-confidence confidence-${activeAtlas.confidence}`}>{activeAtlas.confidence}</em></dd></div>
+            </dl>
+          </header>
+
+          <div className="atlas-controls">
+            <button
+              className={`atlas-mode-button${atlasRulerId ? "" : " active"}`}
+              type="button"
+              onClick={() => setAtlasRulerId("")}
+              aria-pressed={!atlasRulerId}
+            >
+              朝代总览
+            </button>
+            <label className="atlas-select-wrap">
+              <span>君主统治时期</span>
+              <select
+                className="atlas-select"
+                value={atlasRulerId}
+                onChange={(event) => setAtlasRulerId(event.target.value)}
+                aria-label="选择君主统治时期"
+              >
+                <option value="">朝代总览 · 不归因于单一君主</option>
+                {(politiesForEra[atlasEraId] ?? []).map((polity) => (
+                  <optgroup key={polity} label={polity}>
+                    {atlasRulers.filter((ruler) => ruler.polity === polity).map((ruler) => (
+                      <option key={ruler.id} value={ruler.id}>{ruler.name} · {ruler.reign}</option>
+                    ))}
+                  </optgroup>
+                ))}
+              </select>
+            </label>
+            <div className="atlas-ruler-nav" aria-label="前后切换君主">
+              <button type="button" onClick={() => stepAtlasRuler(-1)} disabled={selectedAtlasRulerIndex <= 0}>← 上一位</button>
+              <span>{selectedAtlasRuler ? `${selectedAtlasRulerIndex + 1} / ${atlasRulers.length}` : `${atlasRulers.length} 位可选`}</span>
+              <button type="button" onClick={() => stepAtlasRuler(1)} disabled={selectedAtlasRulerIndex >= atlasRulers.length - 1}>下一位 →</button>
+            </div>
+          </div>
+
+          <div className="atlas-ruler-lens" aria-live="polite">
+            {selectedAtlasRuler && atlasPhase ? (
+              <>
+                <div>
+                  <span>{selectedAtlasRuler.polity} · {selectedAtlasRuler.reign}</span>
+                  <h3>{selectedAtlasRuler.name} · {atlasPhaseLabels[atlasPhase]}观察</h3>
+                </div>
+                <p>{activeAtlas.phases[atlasPhase]}</p>
+                <div className="atlas-ruler-meta">
+                  <small>
+                    以「{activeAtlasEra.name}」总览为底图；阶段由该君主在所属政权的承袭位置推定。社会风俗不会在换一位君主时瞬间重置。
+                  </small>
+                  <button type="button" onClick={(event) => openRuler(selectedAtlasRuler, event.currentTarget)}>打开君王身份卡 →</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div><span>DYNASTY OVERVIEW</span><h3>朝代总览 · 不归因于单一君主</h3></div>
+                <p>{activeAtlas.summary}</p>
+                <small>选择上方任一君主，可按其在所属政权的前、中、后段查看时代变化提示。</small>
+              </>
+            )}
+          </div>
+
+          <div className="atlas-layout">
+            <div className="atlas-map-panel">
+              <div className="atlas-map-caption">
+                <div><span>SCHEMATIC MAP</span><strong>{activeAtlasEra.name}文化—地理示意</strong></div>
+                <em className="atlas-map-disclaimer">历史示意 · 非精确疆界</em>
+              </div>
+              <div className="atlas-map" role="group" aria-label={`${activeAtlasEra.name}文化地理区域，点击区域查看详情`}>
+                {cultureRegionLayout.map((layout) => {
+                  const regionData = activeAtlas.regions[layout.key];
+                  const isActive = Boolean(regionData && layout.key === resolvedAtlasRegionKey);
+                  return (
+                    <button
+                      key={layout.key}
+                      type="button"
+                      className={`atlas-region status-${regionData?.status ?? "empty"}${isActive ? " active" : ""}`}
+                      style={{
+                        left: layout.left,
+                        top: layout.top,
+                        width: layout.width,
+                        height: layout.height,
+                        clipPath: layout.shape,
+                      }}
+                      onClick={() => setAtlasRegionKey(layout.key)}
+                      disabled={!regionData}
+                      aria-pressed={isActive}
+                      aria-label={regionData ? `${layout.label}：${regionData.headline}，${atlasStatusLabels[regionData.status]}` : `${layout.label}：本期不作为主要观察区`}
+                    >
+                      <span>{layout.shortLabel}</span>
+                      {regionData ? <small>{regionData.headline}</small> : null}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="atlas-legend" aria-label="地图图例">
+                {Object.entries(atlasStatusLabels).map(([status, label]) => (
+                  <span key={status}><i className={`status-${status}`} />{label}</span>
+                ))}
+              </div>
+            </div>
+
+            <aside className="atlas-inspector" aria-live="polite">
+              {activeAtlasRegion && resolvedAtlasRegionKey ? (
+                <>
+                  <div className="atlas-region-status">
+                    <span>{cultureRegionLayout.find((region) => region.key === resolvedAtlasRegionKey)?.label}</span>
+                    <em className={`status-${activeAtlasRegion.status}`}>{atlasStatusLabels[activeAtlasRegion.status]}</em>
+                  </div>
+                  <h3>{activeAtlasRegion.headline}</h3>
+                  <p className="atlas-region-detail">{activeAtlasRegion.detail}</p>
+                  <div className="atlas-region-tags">
+                    <span>{activeAtlasEra.name}</span>
+                    <span>{selectedAtlasRuler?.name ?? "朝代总览"}</span>
+                    <span>{activeAtlas.confidence}可信度</span>
+                  </div>
+                </>
+              ) : (
+                <><h3>选择一个有色区域</h3><p>地图会在这里展开该地域的政治层级与文化说明。</p></>
+              )}
+            </aside>
+          </div>
+
+          <div className="atlas-culture-grid">
+            <article className="atlas-culture-card">
+              <span>01 · ATMOSPHERE</span><h3>时代风气</h3>
+              <ul>{activeAtlas.atmosphere.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
+            <article className="atlas-culture-card">
+              <span>02 · CULTURE</span><h3>文化与思想</h3>
+              <ul>{activeAtlas.culture.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
+            <article className="atlas-culture-card">
+              <span>03 · CUSTOMS</span><h3>社会习俗</h3>
+              <ul>{activeAtlas.customs.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
+            <article className="atlas-culture-card">
+              <span>04 · ROUTES</span><h3>交流与通道</h3>
+              <ul>{activeAtlas.routes.map((item) => <li key={item}>{item}</li>)}</ul>
+            </article>
+          </div>
+
+          <aside className="atlas-source-note">
+            <div>
+              <strong>读图说明</strong>
+              <p>
+                本图是文化—地理关系示意，不采用现代国界逻辑。颜色分别表示长期核心、一般控制、交流联系、并立争夺与材料不确定；封国、羁縻、朝贡、军事影响和直接行政控制并不等同。
+              </p>
+            </div>
+            <details className="atlas-sources">
+              <summary>查看资料依据</summary>
+              <div>
+                {cultureAtlasSources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label} ↗</a>)}
+              </div>
+            </details>
+          </aside>
+        </article>
       </section>
 
       <section ref={constellationRef} className="constellation-section" aria-labelledby="constellation-title">
@@ -1368,6 +1695,14 @@ export default function Home() {
                 <div><dt>在位</dt><dd>{selectedRuler.reign}</dd></div>
                 <div><dt>生卒</dt><dd>{selectedRuler.lifespan}</dd></div>
               </dl>
+
+              <button
+                className="profile-atlas-link"
+                type="button"
+                onClick={() => showCultureAtlas(selectedRuler.eraId, selectedRuler.id)}
+              >
+                在文化版图查看「{selectedRuler.name}」统治时期 →
+              </button>
 
               <p className="ruler-identity" id="ruler-dialog-description">{selectedRuler.identity}</p>
 
