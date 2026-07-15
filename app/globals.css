@@ -1392,6 +1392,7 @@ a:focus-visible {
 }
 
 .atlas-map-image {
+  animation: atlas-map-image-in 280ms ease-out both;
   display: block;
   height: 100%;
   inset: 0;
@@ -1399,6 +1400,11 @@ a:focus-visible {
   position: absolute;
   width: 100%;
   z-index: 0;
+}
+
+@keyframes atlas-map-image-in {
+  from { filter: saturate(0.82) blur(2px); opacity: 0.35; transform: scale(1.006); }
+  to { filter: none; opacity: 1; transform: none; }
 }
 
 .atlas-map.has-image-base::before {
@@ -1702,10 +1708,86 @@ a:focus-visible {
   position: absolute;
 }
 
+.atlas-map.has-image-base .atlas-region-cutout:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 3px var(--focus),
+    inset 0 0 24px rgb(255 245 216 / 0.18),
+    0 0 0 2px rgb(255 249 226 / 0.72);
+}
+
 @keyframes atlas-cutout-select {
   0% { transform: translateY(0) scale(0.98); }
   62% { transform: translateY(-8px) scale(1.06); }
   100% { transform: translateY(-6px) scale(1.045); }
+}
+
+.atlas-region-shortcuts {
+  display: flex;
+  gap: 7px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding: 2px 1px 7px;
+  scrollbar-color: rgb(108 89 59 / 0.45) transparent;
+  scrollbar-width: thin;
+}
+
+.atlas-region-shortcuts button {
+  --shortcut-accent: #756143;
+  align-items: flex-start;
+  background: rgb(250 245 231 / 0.84);
+  border: 1px solid rgb(94 77 50 / 0.24);
+  border-top: 3px solid var(--shortcut-accent);
+  color: var(--ink-1);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 44px;
+  min-width: 92px;
+  padding: 7px 9px;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.atlas-region-shortcuts button.status-core { --shortcut-accent: #96362c; }
+.atlas-region-shortcuts button.status-controlled { --shortcut-accent: #8f6f39; }
+.atlas-region-shortcuts button.status-exchange { --shortcut-accent: #49695a; }
+.atlas-region-shortcuts button.status-rival { --shortcut-accent: #554e55; }
+.atlas-region-shortcuts button.status-uncertain { --shortcut-accent: #a08a60; }
+
+.atlas-region-shortcuts button span {
+  font-family: var(--serif);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.atlas-region-shortcuts button small {
+  color: var(--ink-3);
+  font-size: 8px;
+  line-height: 1.35;
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.atlas-region-shortcuts button:hover,
+.atlas-region-shortcuts button:focus-visible,
+.atlas-region-shortcuts button.active {
+  background: #fffaf0;
+  border-color: var(--shortcut-accent);
+  transform: translateY(-2px);
+}
+
+.atlas-region-shortcuts button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.atlas-region-shortcuts button.active {
+  box-shadow: 0 5px 12px rgb(53 40 24 / 0.13);
 }
 
 .atlas-legend {
@@ -3618,6 +3700,26 @@ footer span {
     padding: 2px;
   }
 
+  .atlas-map.has-image-base .atlas-region-cutout > span {
+    font-size: 10px;
+    padding: 3px 5px;
+  }
+
+  .atlas-map.has-image-base .atlas-region-cutout > small {
+    display: none;
+  }
+
+  .atlas-map-action-hint {
+    bottom: 7px;
+    font-size: 7px;
+    left: 7px;
+    padding: 4px 6px;
+  }
+
+  .atlas-region-shortcuts button {
+    min-width: 84px;
+  }
+
   .atlas-map-disclaimer {
     bottom: 7px;
     font-size: 7px;
@@ -3847,6 +3949,33 @@ footer span {
   }
 }
 
+@media (hover: none) {
+  .atlas-map.has-image-base .atlas-region-cutout {
+    backdrop-filter: none;
+    filter: drop-shadow(0 3px 4px rgb(40 29 16 / 0.24));
+  }
+
+  .atlas-map.has-image-base .atlas-region-cutout:hover:not(:disabled) {
+    filter: drop-shadow(0 3px 4px rgb(40 29 16 / 0.24));
+    opacity: 0.78;
+    transform: none;
+  }
+
+  .atlas-map.has-image-base .atlas-region-cutout.active {
+    filter: brightness(1.08) saturate(1.04) drop-shadow(0 7px 6px rgb(37 25 12 / 0.32));
+    opacity: 1;
+    transform: scale(1.02);
+  }
+
+  .atlas-region-shortcuts button:hover {
+    transform: none;
+  }
+
+  .atlas-region-shortcuts button.active {
+    transform: translateY(-1px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -3856,6 +3985,10 @@ footer span {
   }
 
   .atlas-map.has-image-base .atlas-region-cutout.active {
+    animation: none;
+  }
+
+  .atlas-map-image {
     animation: none;
   }
 }

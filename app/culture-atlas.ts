@@ -71,9 +71,27 @@ export const cultureRegionLayout: CultureRegionLayout[] = [
   { key: "lingnan", label: "岭南与海上门户", shortLabel: "岭南", left: "40%", top: "82%", width: "34%", height: "15%", shape: "polygon(0 20%, 70% 0, 100% 50%, 82% 100%, 15% 86%)" },
 ];
 
+const selectAtlasRegions = (...keys: CultureRegionKey[]): CultureRegionLayout[] =>
+  keys.map((key) => {
+    const layout = cultureRegionLayout.find((item) => item.key === key);
+    if (!layout) throw new Error(`Missing culture-atlas region layout: ${key}`);
+    return layout;
+  });
+
+const generatedAtlasAsset = (
+  eraId: string,
+  eraName: string,
+  ...keys: CultureRegionKey[]
+): CultureAtlasMapAsset => ({
+  src: `/atlas/${eraId}-cultural-map-v1.webp`,
+  alt: `${eraName}文化地理精绘古地图底图，展示主要自然地理、文化中心与交流走廊`,
+  credit: "AI 精绘历史文化底图 · 互动范围由独立热区层标注",
+  regions: selectAtlasRegions(...keys),
+});
+
 export const cultureAtlasMapAssets: Partial<Record<string, CultureAtlasMapAsset>> = {
   xia: {
-    src: "/atlas/xia-cultural-map-v1.png",
+    src: "/atlas/xia-cultural-map-v1.webp",
     alt: "夏代文化地理古地图底图，展现黄河中下游、伊洛盆地、关中、江淮与巴蜀的自然地理关系",
     credit: "AI 精绘历史地理底图 · 互动范围由独立热区层标注",
     regions: [
@@ -119,6 +137,28 @@ export const cultureAtlasMapAssets: Partial<Record<string, CultureAtlasMapAsset>
       },
     ],
   },
+  shang: generatedAtlasAsset("shang", "商代", "heartland", "jianghuai", "northeast", "southwest", "northwest"),
+  "western-zhou": generatedAtlasAsset("western-zhou", "西周", "guanzhong", "heartland", "jianghuai", "northeast", "southwest"),
+  "eastern-zhou": generatedAtlasAsset("eastern-zhou", "东周", "heartland", "guanzhong", "jianghuai", "lower-yangtze", "southwest", "steppe"),
+  qin: generatedAtlasAsset("qin", "秦代", "guanzhong", "heartland", "jianghuai", "southwest", "lingnan", "steppe"),
+  "western-han": generatedAtlasAsset("western-han", "西汉", "guanzhong", "heartland", "northwest", "western-regions", "southwest", "lingnan", "steppe"),
+  xin: generatedAtlasAsset("xin", "新与更始时期", "guanzhong", "heartland", "jianghuai", "steppe"),
+  "eastern-han": generatedAtlasAsset("eastern-han", "东汉", "heartland", "guanzhong", "jianghuai", "southwest", "northwest", "steppe"),
+  "three-kingdoms": generatedAtlasAsset("three-kingdoms", "三国", "heartland", "southwest", "lower-yangtze", "lingnan", "steppe"),
+  jin: generatedAtlasAsset("jin", "两晋", "heartland", "lower-yangtze", "jianghuai", "southwest", "steppe"),
+  "sixteen-kingdoms": generatedAtlasAsset("sixteen-kingdoms", "十六国", "heartland", "guanzhong", "northwest", "northeast", "southwest", "steppe"),
+  "northern-southern": generatedAtlasAsset("northern-southern", "南北朝", "heartland", "steppe", "lower-yangtze", "jianghuai", "southwest", "northwest"),
+  sui: generatedAtlasAsset("sui", "隋代", "guanzhong", "heartland", "jianghuai", "lower-yangtze", "northeast", "northwest"),
+  tang: generatedAtlasAsset("tang", "唐与武周", "guanzhong", "heartland", "northwest", "western-regions", "steppe", "lower-yangtze", "lingnan", "plateau"),
+  "five-dynasties": generatedAtlasAsset("five-dynasties", "五代十国", "heartland", "lower-yangtze", "southwest", "southeast", "lingnan", "northeast"),
+  liao: generatedAtlasAsset("liao", "辽代", "steppe", "northeast", "heartland", "northwest", "guanzhong"),
+  "northern-song": generatedAtlasAsset("northern-song", "北宋", "heartland", "jianghuai", "lower-yangtze", "northwest", "northeast", "lingnan"),
+  "western-xia": generatedAtlasAsset("western-xia", "西夏", "northwest", "western-regions", "plateau", "guanzhong", "steppe"),
+  "jin-dynasty": generatedAtlasAsset("jin-dynasty", "金代", "northeast", "heartland", "steppe", "jianghuai", "guanzhong"),
+  "southern-song": generatedAtlasAsset("southern-song", "南宋", "lower-yangtze", "jianghuai", "southwest", "southeast", "lingnan", "heartland"),
+  yuan: generatedAtlasAsset("yuan", "元代", "steppe", "heartland", "lower-yangtze", "plateau", "western-regions", "southwest", "lingnan", "northeast"),
+  ming: generatedAtlasAsset("ming", "明代", "heartland", "lower-yangtze", "jianghuai", "northwest", "northeast", "southwest", "southeast", "lingnan"),
+  qing: generatedAtlasAsset("qing", "清代", "northeast", "heartland", "lower-yangtze", "steppe", "western-regions", "plateau", "southwest", "lingnan", "northwest"),
 };
 
 const region = (status: CultureRegionStatus, headline: string, detail: string): CultureRegion => ({ status, headline, detail });

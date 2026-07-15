@@ -33,6 +33,16 @@ import {
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const rulerProfileByName = new Map(allRulerProfiles.map((ruler) => [ruler.name, ruler]));
 const constellationCanvas = { scaleX: 1.65, scaleY: 1.35, offsetX: 110, offsetY: 70 } as const;
+const atlasMapPreloadCache = new Set<string>();
+
+function preloadAtlasMap(eraId: string) {
+  const src = cultureAtlasMapAssets[eraId]?.src;
+  if (!src || typeof window === "undefined" || atlasMapPreloadCache.has(src)) return;
+  atlasMapPreloadCache.add(src);
+  const image = new window.Image();
+  image.decoding = "async";
+  image.src = `${publicBasePath}${src}`;
+}
 
 type EventItem = {
   year: string;
@@ -545,7 +555,7 @@ export default function Home() {
   const activeConstellation = rulerConstellations.find((item) => item.id === constellationId) ?? rulerConstellations[0];
   const activeAtlas = cultureAtlasByEra[atlasEraId] ?? cultureAtlas[0];
   const activeAtlasEra = eras.find((era) => era.id === atlasEraId) ?? eras[0];
-  const activeAtlasMapAsset = atlasEraId === "xia" ? cultureAtlasMapAssets.xia : undefined;
+  const activeAtlasMapAsset = cultureAtlasMapAssets[atlasEraId];
   const activeAtlasRegionLayout = activeAtlasMapAsset?.regions ?? cultureRegionLayout;
   const atlasRulers = rulersByEra[atlasEraId] ?? [];
   const selectedAtlasRuler = atlasRulers.find((ruler) => ruler.id === atlasRulerId) ?? null;
@@ -1181,7 +1191,7 @@ export default function Home() {
           </div>
           <div className="atlas-heading-copy">
             <p>
-              把疆域层级、交流通道和生活风物放在同一张示意图上。先选历史时期，再切到任一君主的在位观察切片；分裂时代仍会保留同期政权，而不是把它们抹成一块颜色。
+              23 个历史时期各配一幅独立精绘底图，把疆域层级、交流通道和生活风物放在同一张示意图上。指向地域可以预览真实地图裁片，点击后锁定说明；分裂时代仍会保留同期政权，而不是把它们抹成一块颜色。
             </p>
             <button type="button" onClick={() => selectAtlasEra(currentEra.id)}>
               定位到正在浏览的「{currentEra.name}」→
@@ -1207,6 +1217,9 @@ export default function Home() {
                 aria-selected={entry.eraId === atlasEraId}
                 aria-controls="culture-atlas-panel"
                 className={entry.eraId === atlasEraId ? "active" : ""}
+                onFocus={() => preloadAtlasMap(entry.eraId)}
+                onPointerEnter={() => preloadAtlasMap(entry.eraId)}
+                onPointerDown={() => preloadAtlasMap(entry.eraId)}
                 onClick={() => selectAtlasEra(entry.eraId)}
               >
                 <strong>{era?.name ?? entry.eraId}</strong>
@@ -1303,18 +1316,21 @@ export default function Home() {
                 <em className="atlas-map-disclaimer">历史示意 · 非精确疆界</em>
               </div>
               <div
-                className={`atlas-map${activeAtlasMapAsset ? " has-image-base xia-image-base" : ""}`}
+                className={`atlas-map${activeAtlasMapAsset ? " has-image-base" : ""}`}
                 role="group"
                 aria-label={`${activeAtlasMapAsset?.alt ?? `${activeAtlasEra.name}文化地理示意`}；点击区域查看详情`}
               >
                 {activeAtlasMapAsset ? (
                   <img
+                    key={activeAtlasMapAsset.src}
                     className="atlas-map-image"
                     src={`${publicBasePath}${activeAtlasMapAsset.src}`}
                     alt=""
                     aria-hidden="true"
                     decoding="async"
                     loading="lazy"
+                    width={1539}
+                    height={1022}
                   />
                 ) : null}
                 {activeAtlasRegionLayout.map((layout) => {
@@ -1348,6 +1364,8 @@ export default function Home() {
                           decoding="async"
                           draggable="false"
                           loading="lazy"
+                          width={1539}
+                          height={1022}
                         />
                       ) : null}
                       <span>{layout.shortLabel}</span>
@@ -1355,8 +1373,30 @@ export default function Home() {
                     </button>
                   );
                 })}
-                {activeAtlasMapAsset ? <span className="atlas-map-action-hint" aria-hidden="true">悬停预览 · 点击锁定</span> : null}
+                {activeAtlasMapAsset ? <span className="atlas-map-action-hint" aria-hidden="true">指向预览 · 轻点锁定</span> : null}
               </div>
+              {activeAtlasMapAsset ? (
+                <div className="atlas-region-shortcuts" role="group" aria-label={`${activeAtlasEra.name}文化地图区域快捷选择`}>
+                  {activeAtlasRegionLayout.map((layout) => {
+                    const regionData = activeAtlas.regions[layout.key];
+                    if (!regionData) return null;
+                    const isActive = layout.key === resolvedAtlasRegionKey;
+                    return (
+                      <button
+                        key={layout.key}
+                        type="button"
+                        className={`status-${regionData.status}${isActive ? " active" : ""}`}
+                        onClick={() => setAtlasRegionKey(layout.key)}
+                        aria-pressed={isActive}
+                        aria-label={`${layout.label}：${regionData.headline}，${atlasStatusLabels[regionData.status]}`}
+                      >
+                        <span>{layout.shortLabel}</span>
+                        <small>{regionData.headline}</small>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
               <div className="atlas-legend" aria-label="地图图例">
                 {Object.entries(atlasStatusLabels).map(([status, label]) => (
                   <span key={status}><i className={`status-${status}`} />{label}</span>

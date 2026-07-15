@@ -170,6 +170,7 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
   assert.ok(declaredStatuses.length >= 23, "every atlas entry should expose at least one interactive region");
   assert.ok(declaredStatuses.every((status) => legalStatuses.has(status)), "atlas regions should use only documented statuses");
 
+  const atlasRegionKeysByEra = new Map();
   for (let index = 0; index < atlasEraMatches.length; index += 1) {
     const start = atlasEraMatches[index].index;
     const end = atlasEraMatches[index + 1]?.index ?? atlas.indexOf("\n];", start);
@@ -182,6 +183,8 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
     }
     assert.match(entry, /phases: \{\s*early: "[^"]+",\s*middle: "[^"]+",\s*late: "[^"]+"\s*\}/, `${eraId} should cover early, middle, and late phases`);
     assert.match(entry, /regions: \{[\s\S]*?region\("(?:core|controlled|exchange|rival|uncertain)"/, `${eraId} should include a mapped region`);
+    const regionKeys = [...entry.matchAll(/^\s{6}(?:"([^"]+)"|([a-z-]+)):\s*region/gm)].map((match) => match[1] ?? match[2]);
+    atlasRegionKeysByEra.set(eraId, regionKeys);
   }
 
   const sourceBlock = atlas.match(/export const cultureAtlasSources = \[([\s\S]*?)\n\];/)?.[1] ?? "";
@@ -197,13 +200,26 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
   assert.match(page, /showCultureAtlas/);
   assert.match(page, /rulersByEra\[atlasEraId\]/);
   assert.match(page, /(?:cultureRegionLayout|activeAtlasRegionLayout)\.map/);
-  assert.match(page, /atlasEraId\s*===\s*"xia"/, "the generated raster base should be guarded to the Xia atlas only");
-  assert.match(atlas, /xia:\s*\{[\s\S]*?src:\s*"\/atlas\/xia-cultural-map-v1\.png"/, "the Xia atlas should reference its generated local raster base");
+  assert.match(page, /cultureAtlasMapAssets\[atlasEraId\]/, "every era should resolve its own generated raster base");
+  assert.doesNotMatch(page, /atlasEraId\s*===\s*"xia"/, "the generated raster base should no longer be hard-coded to Xia");
+  assert.match(atlas, /xia:\s*\{[\s\S]*?src:\s*"\/atlas\/xia-cultural-map-v1\.webp"/, "the Xia atlas should reference its generated local raster base");
 
-  const xiaImageLayer = [...page.matchAll(/<(?:img|div)\b[^>]*>/g)]
+  const generatedAssets = [...atlas.matchAll(/generatedAtlasAsset\("([^"]+)",\s*"[^"]+",\s*([^\n]+)\)/g)].map((match) => ({
+    eraId: match[1],
+    regionKeys: [...match[2].matchAll(/"([^"]+)"/g)].map((keyMatch) => keyMatch[1]),
+  }));
+  assert.equal(generatedAssets.length, 22, "every post-Xia era should expose a generated map asset");
+  assert.equal(new Set(generatedAssets.map((asset) => asset.eraId)).size, 22, "generated map asset paths should be unique");
+  assert.deepEqual(["xia", ...generatedAssets.map((asset) => asset.eraId)].sort(), [...timelineEraIds].sort());
+  for (const asset of generatedAssets) {
+    assert.deepEqual(asset.regionKeys, atlasRegionKeysByEra.get(asset.eraId), `${asset.eraId} map hit areas should match its atlas data`);
+    await access(new URL(`../public/atlas/${asset.eraId}-cultural-map-v1.webp`, import.meta.url));
+  }
+
+  const atlasImageLayer = [...page.matchAll(/<(?:img|div)\b[^>]*>/g)]
     .map((match) => match[0])
-    .find((tag) => /(?:atlas-map-(?:image|base)|xia[^\s"']*map|has-image-base)/i.test(tag) && /aria-hidden="true"/.test(tag));
-  assert.ok(xiaImageLayer, "the decorative Xia raster should live in an aria-hidden map base layer");
+    .find((tag) => /(?:atlas-map-(?:image|base)|has-image-base)/i.test(tag) && /aria-hidden="true"/.test(tag));
+  assert.ok(atlasImageLayer, "the decorative raster should live in an aria-hidden map base layer");
 
   const regionMapStart = ["{activeAtlasRegionLayout.map", "{cultureRegionLayout.map"]
     .map((marker) => page.indexOf(marker))
@@ -214,12 +230,15 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
   assert.match(regionMapBlock, /className=\{`atlas-region/, "interactive hit areas should remain transparent HTML button overlays");
   assert.match(regionMapBlock, /disabled=\{!regionData\}/);
   assert.match(regionMapBlock, /aria-pressed=\{isActive\}/);
+  assert.match(page, /className="atlas-region-shortcuts"/);
+  assert.match(page, /width=\{1539\}/);
+  assert.match(page, /height=\{1022\}/);
   assert.match(page, /\u6587\u5316\u7248\u56fe/);
   assert.match(page, /\u671d\u4ee3\u603b\u89c8/);
   assert.match(page, /\u5386\u53f2\u793a\u610f/);
   assert.doesNotMatch(page, /<svg/);
 
-  await access(new URL("../public/atlas/xia-cultural-map-v1.png", import.meta.url));
+  await access(new URL("../public/atlas/xia-cultural-map-v1.webp", import.meta.url));
 });
 
 test("catalogues every ruler in the 23-part timeline without duplicate restoration cards", async () => {
