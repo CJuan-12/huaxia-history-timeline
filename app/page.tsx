@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type KeyboardEvent,
   type PointerEvent,
   type WheelEvent,
@@ -23,6 +24,7 @@ import { rulerConstellations } from "./ruler-constellations";
 import {
   cultureAtlas,
   cultureAtlasByEra,
+  cultureAtlasMapAssets,
   cultureAtlasSources,
   cultureRegionLayout,
   type CultureRegionKey,
@@ -74,6 +76,19 @@ function getRulerAtlasPhase(ruler: CatalogRulerProfile, profiles: CatalogRulerPr
   if (ratio <= 1 / 3) return "early";
   if (ratio < 2 / 3) return "middle";
   return "late";
+}
+
+function getAtlasImageSliceStyle(layout: (typeof cultureRegionLayout)[number]): CSSProperties {
+  const left = Number.parseFloat(layout.left);
+  const top = Number.parseFloat(layout.top);
+  const width = Number.parseFloat(layout.width);
+  const height = Number.parseFloat(layout.height);
+  return {
+    left: `${(-left / width) * 100}%`,
+    top: `${(-top / height) * 100}%`,
+    width: `${10000 / width}%`,
+    height: `${10000 / height}%`,
+  };
 }
 
 const mbtiCriteria = [
@@ -530,6 +545,8 @@ export default function Home() {
   const activeConstellation = rulerConstellations.find((item) => item.id === constellationId) ?? rulerConstellations[0];
   const activeAtlas = cultureAtlasByEra[atlasEraId] ?? cultureAtlas[0];
   const activeAtlasEra = eras.find((era) => era.id === atlasEraId) ?? eras[0];
+  const activeAtlasMapAsset = atlasEraId === "xia" ? cultureAtlasMapAssets.xia : undefined;
+  const activeAtlasRegionLayout = activeAtlasMapAsset?.regions ?? cultureRegionLayout;
   const atlasRulers = rulersByEra[atlasEraId] ?? [];
   const selectedAtlasRuler = atlasRulers.find((ruler) => ruler.id === atlasRulerId) ?? null;
   const selectedAtlasRulerIndex = selectedAtlasRuler ? atlasRulers.findIndex((ruler) => ruler.id === selectedAtlasRuler.id) : -1;
@@ -1278,18 +1295,37 @@ export default function Home() {
           <div className="atlas-layout">
             <div className="atlas-map-panel">
               <div className="atlas-map-caption">
-                <div><span>SCHEMATIC MAP</span><strong>{activeAtlasEra.name}文化—地理示意</strong></div>
+                <div>
+                  <span>{activeAtlasMapAsset ? "IMAGE BASE + INTERACTIVE CUTOUTS" : "SCHEMATIC MAP"}</span>
+                  <strong>{activeAtlasEra.name}文化—地理示意</strong>
+                  {activeAtlasMapAsset ? <small className="atlas-map-credit">{activeAtlasMapAsset.credit}</small> : null}
+                </div>
                 <em className="atlas-map-disclaimer">历史示意 · 非精确疆界</em>
               </div>
-              <div className="atlas-map" role="group" aria-label={`${activeAtlasEra.name}文化地理区域，点击区域查看详情`}>
-                {cultureRegionLayout.map((layout) => {
+              <div
+                className={`atlas-map${activeAtlasMapAsset ? " has-image-base xia-image-base" : ""}`}
+                role="group"
+                aria-label={`${activeAtlasMapAsset?.alt ?? `${activeAtlasEra.name}文化地理示意`}；点击区域查看详情`}
+              >
+                {activeAtlasMapAsset ? (
+                  <img
+                    className="atlas-map-image"
+                    src={`${publicBasePath}${activeAtlasMapAsset.src}`}
+                    alt=""
+                    aria-hidden="true"
+                    decoding="async"
+                    loading="lazy"
+                  />
+                ) : null}
+                {activeAtlasRegionLayout.map((layout) => {
                   const regionData = activeAtlas.regions[layout.key];
                   const isActive = Boolean(regionData && layout.key === resolvedAtlasRegionKey);
                   return (
                     <button
                       key={layout.key}
                       type="button"
-                      className={`atlas-region status-${regionData?.status ?? "empty"}${isActive ? " active" : ""}`}
+                      className={`atlas-region status-${regionData?.status ?? "empty"}${activeAtlasMapAsset ? " atlas-region-cutout" : ""}${isActive ? " active" : ""}`}
+                      data-region-key={layout.key}
                       style={{
                         left: layout.left,
                         top: layout.top,
@@ -1302,11 +1338,24 @@ export default function Home() {
                       aria-pressed={isActive}
                       aria-label={regionData ? `${layout.label}：${regionData.headline}，${atlasStatusLabels[regionData.status]}` : `${layout.label}：本期不作为主要观察区`}
                     >
+                      {activeAtlasMapAsset ? (
+                        <img
+                          className="atlas-region-image-slice"
+                          src={`${publicBasePath}${activeAtlasMapAsset.src}`}
+                          style={getAtlasImageSliceStyle(layout)}
+                          alt=""
+                          aria-hidden="true"
+                          decoding="async"
+                          draggable="false"
+                          loading="lazy"
+                        />
+                      ) : null}
                       <span>{layout.shortLabel}</span>
                       {regionData ? <small>{regionData.headline}</small> : null}
                     </button>
                   );
                 })}
+                {activeAtlasMapAsset ? <span className="atlas-map-action-hint" aria-hidden="true">悬停预览 · 点击锁定</span> : null}
               </div>
               <div className="atlas-legend" aria-label="地图图例">
                 {Object.entries(atlasStatusLabels).map(([status, label]) => (
@@ -1319,7 +1368,7 @@ export default function Home() {
               {activeAtlasRegion && resolvedAtlasRegionKey ? (
                 <>
                   <div className="atlas-region-status">
-                    <span>{cultureRegionLayout.find((region) => region.key === resolvedAtlasRegionKey)?.label}</span>
+                    <span>{activeAtlasRegionLayout.find((region) => region.key === resolvedAtlasRegionKey)?.label}</span>
                     <em className={`status-${activeAtlasRegion.status}`}>{atlasStatusLabels[activeAtlasRegion.status]}</em>
                   </div>
                   <h3>{activeAtlasRegion.headline}</h3>

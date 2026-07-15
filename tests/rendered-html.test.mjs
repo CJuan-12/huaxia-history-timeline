@@ -196,17 +196,30 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
   assert.match(page, /id="culture-atlas"/);
   assert.match(page, /showCultureAtlas/);
   assert.match(page, /rulersByEra\[atlasEraId\]/);
-  assert.match(page, /cultureRegionLayout\.map/);
-  const regionMapStart = page.indexOf("{cultureRegionLayout.map");
+  assert.match(page, /(?:cultureRegionLayout|activeAtlasRegionLayout)\.map/);
+  assert.match(page, /atlasEraId\s*===\s*"xia"/, "the generated raster base should be guarded to the Xia atlas only");
+  assert.match(atlas, /xia:\s*\{[\s\S]*?src:\s*"\/atlas\/xia-cultural-map-v1\.png"/, "the Xia atlas should reference its generated local raster base");
+
+  const xiaImageLayer = [...page.matchAll(/<(?:img|div)\b[^>]*>/g)]
+    .map((match) => match[0])
+    .find((tag) => /(?:atlas-map-(?:image|base)|xia[^\s"']*map|has-image-base)/i.test(tag) && /aria-hidden="true"/.test(tag));
+  assert.ok(xiaImageLayer, "the decorative Xia raster should live in an aria-hidden map base layer");
+
+  const regionMapStart = ["{activeAtlasRegionLayout.map", "{cultureRegionLayout.map"]
+    .map((marker) => page.indexOf(marker))
+    .find((index) => index >= 0) ?? -1;
   const regionMapBlock = page.slice(regionMapStart, page.indexOf("</div>", regionMapStart));
   assert.ok(regionMapStart >= 0, "page should render the atlas region layout");
   assert.match(regionMapBlock, /<button/);
+  assert.match(regionMapBlock, /className=\{`atlas-region/, "interactive hit areas should remain transparent HTML button overlays");
   assert.match(regionMapBlock, /disabled=\{!regionData\}/);
   assert.match(regionMapBlock, /aria-pressed=\{isActive\}/);
   assert.match(page, /\u6587\u5316\u7248\u56fe/);
   assert.match(page, /\u671d\u4ee3\u603b\u89c8/);
   assert.match(page, /\u5386\u53f2\u793a\u610f/);
   assert.doesNotMatch(page, /<svg/);
+
+  await access(new URL("../public/atlas/xia-cultural-map-v1.png", import.meta.url));
 });
 
 test("catalogues every ruler in the 23-part timeline without duplicate restoration cards", async () => {

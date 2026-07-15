@@ -38,7 +38,7 @@ export type CultureAtlasEntry = {
   regions: Partial<Record<CultureRegionKey, CultureRegion>>;
 };
 
-export const cultureRegionLayout: Array<{
+export type CultureRegionLayout = {
   key: CultureRegionKey;
   label: string;
   shortLabel: string;
@@ -47,7 +47,16 @@ export const cultureRegionLayout: Array<{
   width: string;
   height: string;
   shape: string;
-}> = [
+};
+
+export type CultureAtlasMapAsset = {
+  src: string;
+  alt: string;
+  credit: string;
+  regions: CultureRegionLayout[];
+};
+
+export const cultureRegionLayout: CultureRegionLayout[] = [
   { key: "western-regions", label: "西域与绿洲通道", shortLabel: "西域", left: "2%", top: "25%", width: "25%", height: "23%", shape: "polygon(0 25%, 82% 0, 100% 45%, 76% 100%, 8% 82%)" },
   { key: "northwest", label: "河西与西北走廊", shortLabel: "河西", left: "21%", top: "20%", width: "25%", height: "21%", shape: "polygon(0 20%, 82% 0, 100% 55%, 70% 100%, 8% 78%)" },
   { key: "plateau", label: "青藏高原及周缘", shortLabel: "高原", left: "11%", top: "48%", width: "31%", height: "28%", shape: "polygon(5% 18%, 76% 0, 100% 42%, 82% 100%, 12% 90%, 0 50%)" },
@@ -61,6 +70,56 @@ export const cultureRegionLayout: Array<{
   { key: "southeast", label: "东南丘陵与闽地", shortLabel: "东南", left: "58%", top: "68%", width: "23%", height: "23%", shape: "polygon(5% 0, 82% 12%, 100% 55%, 60% 100%, 0 72%)" },
   { key: "lingnan", label: "岭南与海上门户", shortLabel: "岭南", left: "40%", top: "82%", width: "34%", height: "15%", shape: "polygon(0 20%, 70% 0, 100% 50%, 82% 100%, 15% 86%)" },
 ];
+
+export const cultureAtlasMapAssets: Partial<Record<string, CultureAtlasMapAsset>> = {
+  xia: {
+    src: "/atlas/xia-cultural-map-v1.png",
+    alt: "夏代文化地理古地图底图，展现黄河中下游、伊洛盆地、关中、江淮与巴蜀的自然地理关系",
+    credit: "AI 精绘历史地理底图 · 互动范围由独立热区层标注",
+    regions: [
+      {
+        key: "guanzhong",
+        label: "关中与河东",
+        shortLabel: "关中",
+        left: "29%",
+        top: "35%",
+        width: "22%",
+        height: "20%",
+        shape: "polygon(5% 42%, 18% 11%, 64% 0, 100% 16%, 91% 68%, 73% 100%, 27% 95%, 0 68%)",
+      },
+      {
+        key: "heartland",
+        label: "中原与伊洛盆地",
+        shortLabel: "中原",
+        left: "47%",
+        top: "39%",
+        width: "23%",
+        height: "25%",
+        shape: "polygon(13% 0, 61% 4%, 96% 24%, 100% 68%, 78% 92%, 39% 100%, 4% 80%, 0 40%)",
+      },
+      {
+        key: "jianghuai",
+        label: "江淮与长江中游",
+        shortLabel: "江淮",
+        left: "52%",
+        top: "55%",
+        width: "28%",
+        height: "23%",
+        shape: "polygon(11% 22%, 46% 0, 79% 13%, 100% 39%, 82% 78%, 46% 100%, 11% 83%, 0 48%)",
+      },
+      {
+        key: "southwest",
+        label: "巴蜀与西南山地",
+        shortLabel: "巴蜀",
+        left: "24%",
+        top: "59%",
+        width: "30%",
+        height: "29%",
+        shape: "polygon(17% 21%, 53% 0, 87% 10%, 100% 41%, 87% 76%, 60% 100%, 20% 90%, 0 62%, 3% 35%)",
+      },
+    ],
+  },
+};
 
 const region = (status: CultureRegionStatus, headline: string, detail: string): CultureRegion => ({ status, headline, detail });
 
