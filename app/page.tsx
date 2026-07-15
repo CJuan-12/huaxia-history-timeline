@@ -29,6 +29,12 @@ import {
   cultureRegionLayout,
   type CultureRegionKey,
 } from "./culture-atlas";
+import {
+  resolveRulerTerritoryState,
+  rulerMapMomentLabels,
+  territoryTrendLabels,
+  type RulerMapMoment,
+} from "./ruler-territory";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const rulerProfileByName = new Map(allRulerProfiles.map((ruler) => [ruler.name, ruler]));
@@ -62,14 +68,6 @@ type Era = {
   events: EventItem[];
 };
 
-type AtlasPhase = "early" | "middle" | "late";
-
-const atlasPhaseLabels: Record<AtlasPhase, string> = {
-  early: "政权前段",
-  middle: "政权中段",
-  late: "政权后段",
-};
-
 const atlasStatusLabels = {
   core: "长期核心",
   controlled: "一般控制",
@@ -78,15 +76,21 @@ const atlasStatusLabels = {
   uncertain: "材料不确定",
 } as const;
 
-function getRulerAtlasPhase(ruler: CatalogRulerProfile, profiles: CatalogRulerProfile[]): AtlasPhase {
-  const peers = profiles.filter((profile) => profile.polity === ruler.polity);
-  const index = Math.max(0, peers.findIndex((profile) => profile.id === ruler.id));
-  if (peers.length <= 1) return "middle";
-  const ratio = index / (peers.length - 1);
-  if (ratio <= 1 / 3) return "early";
-  if (ratio < 2 / 3) return "middle";
-  return "late";
-}
+const territoryStatusLabels = {
+  core: "政权核心",
+  controlled: "有效控制",
+  exchange: "藩属／影响",
+  rival: "同期政权／争夺",
+  uncertain: "边界／实控存疑",
+} as const;
+
+const territoryConfidenceLabels = {
+  high: "较高",
+  medium: "中等",
+  low: "谨慎",
+} as const;
+
+const rulerMapMoments: RulerMapMoment[] = ["accession", "middle", "end"];
 
 function getAtlasImageSliceStyle(layout: (typeof cultureRegionLayout)[number]): CSSProperties {
   const left = Number.parseFloat(layout.left);
@@ -535,6 +539,7 @@ export default function Home() {
   const atlasEraTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [atlasEraId, setAtlasEraId] = useState(eras[0].id);
   const [atlasRulerId, setAtlasRulerId] = useState("");
+  const [atlasRulerMoment, setAtlasRulerMoment] = useState<RulerMapMoment>("accession");
   const [atlasRegionKey, setAtlasRegionKey] = useState<CultureRegionKey>("heartland");
   const directoryRef = useRef<HTMLElement>(null);
   const constellationRef = useRef<HTMLElement>(null);
@@ -557,13 +562,25 @@ export default function Home() {
   const activeAtlasEra = eras.find((era) => era.id === atlasEraId) ?? eras[0];
   const activeAtlasMapAsset = cultureAtlasMapAssets[atlasEraId];
   const activeAtlasRegionLayout = activeAtlasMapAsset?.regions ?? cultureRegionLayout;
-  const atlasRulers = rulersByEra[atlasEraId] ?? [];
+  const atlasRulers = useMemo(() => rulersByEra[atlasEraId] ?? [], [atlasEraId]);
   const selectedAtlasRuler = atlasRulers.find((ruler) => ruler.id === atlasRulerId) ?? null;
-  const selectedAtlasRulerIndex = selectedAtlasRuler ? atlasRulers.findIndex((ruler) => ruler.id === selectedAtlasRuler.id) : -1;
-  const atlasPhase = selectedAtlasRuler ? getRulerAtlasPhase(selectedAtlasRuler, atlasRulers) : null;
-  const availableAtlasRegionKeys = Object.keys(activeAtlas.regions) as CultureRegionKey[];
-  const resolvedAtlasRegionKey = activeAtlas.regions[atlasRegionKey] ? atlasRegionKey : availableAtlasRegionKeys[0];
-  const activeAtlasRegion = resolvedAtlasRegionKey ? activeAtlas.regions[resolvedAtlasRegionKey] : undefined;
+  const atlasPolityRulers = selectedAtlasRuler
+    ? atlasRulers.filter((ruler) => ruler.polity === selectedAtlasRuler.polity)
+    : [];
+  const selectedAtlasRulerIndex = selectedAtlasRuler
+    ? atlasPolityRulers.findIndex((ruler) => ruler.id === selectedAtlasRuler.id)
+    : -1;
+  const rulerTerritoryState = useMemo(
+    () => selectedAtlasRuler
+      ? resolveRulerTerritoryState(selectedAtlasRuler, atlasRulers, activeAtlas.regions, atlasRulerMoment)
+      : null,
+    [activeAtlas.regions, atlasRulerMoment, atlasRulers, selectedAtlasRuler],
+  );
+  const activeMapRegions = rulerTerritoryState?.regions ?? activeAtlas.regions;
+  const activeMapStatusLabels = selectedAtlasRuler ? territoryStatusLabels : atlasStatusLabels;
+  const availableAtlasRegionKeys = Object.keys(activeMapRegions) as CultureRegionKey[];
+  const resolvedAtlasRegionKey = activeMapRegions[atlasRegionKey] ? atlasRegionKey : availableAtlasRegionKeys[0];
+  const activeAtlasRegion = resolvedAtlasRegionKey ? activeMapRegions[resolvedAtlasRegionKey] : undefined;
 
   const directoryPolities = rulerEra === "all" ? [] : (politiesForEra[rulerEra] ?? []);
   const filteredRulers = useMemo(() => {
@@ -811,6 +828,7 @@ export default function Home() {
     if (!entry) return;
     setAtlasEraId(eraId);
     setAtlasRulerId("");
+    setAtlasRulerMoment("accession");
     const firstRegion = Object.keys(entry.regions)[0] as CultureRegionKey | undefined;
     if (firstRegion) setAtlasRegionKey(firstRegion);
   };
@@ -820,6 +838,7 @@ export default function Home() {
     if (entry) {
       setAtlasEraId(eraId);
       setAtlasRulerId(rulerId);
+      setAtlasRulerMoment("accession");
       const firstRegion = Object.keys(entry.regions)[0] as CultureRegionKey | undefined;
       if (firstRegion) setAtlasRegionKey(firstRegion);
     }
@@ -834,11 +853,12 @@ export default function Home() {
   };
 
   const stepAtlasRuler = (direction: -1 | 1) => {
-    if (!atlasRulers.length) return;
+    if (!atlasPolityRulers.length) return;
     const nextIndex = selectedAtlasRulerIndex < 0
-      ? direction > 0 ? 0 : atlasRulers.length - 1
-      : clamp(selectedAtlasRulerIndex + direction, 0, atlasRulers.length - 1);
-    setAtlasRulerId(atlasRulers[nextIndex].id);
+      ? direction > 0 ? 0 : atlasPolityRulers.length - 1
+      : clamp(selectedAtlasRulerIndex + direction, 0, atlasPolityRulers.length - 1);
+    setAtlasRulerId(atlasPolityRulers[nextIndex].id);
+    setAtlasRulerMoment("accession");
   };
 
   const showConstellation = (eraId: string) => {
@@ -1251,7 +1271,10 @@ export default function Home() {
             <button
               className={`atlas-mode-button${atlasRulerId ? "" : " active"}`}
               type="button"
-              onClick={() => setAtlasRulerId("")}
+              onClick={() => {
+                setAtlasRulerId("");
+                setAtlasRulerMoment("accession");
+              }}
               aria-pressed={!atlasRulerId}
             >
               朝代总览
@@ -1261,10 +1284,13 @@ export default function Home() {
               <select
                 className="atlas-select"
                 value={atlasRulerId}
-                onChange={(event) => setAtlasRulerId(event.target.value)}
+                onChange={(event) => {
+                  setAtlasRulerId(event.target.value);
+                  setAtlasRulerMoment("accession");
+                }}
                 aria-label="选择君主统治时期"
               >
-                <option value="">朝代总览 · 不归因于单一君主</option>
+                <option value="">朝代整体概览 · 未选择具体君主</option>
                 {(politiesForEra[atlasEraId] ?? []).map((polity) => (
                   <optgroup key={polity} label={polity}>
                     {atlasRulers.filter((ruler) => ruler.polity === polity).map((ruler) => (
@@ -1276,22 +1302,43 @@ export default function Home() {
             </label>
             <div className="atlas-ruler-nav" aria-label="前后切换君主">
               <button type="button" onClick={() => stepAtlasRuler(-1)} disabled={selectedAtlasRulerIndex <= 0}>← 上一位</button>
-              <span>{selectedAtlasRuler ? `${selectedAtlasRulerIndex + 1} / ${atlasRulers.length}` : `${atlasRulers.length} 位可选`}</span>
-              <button type="button" onClick={() => stepAtlasRuler(1)} disabled={selectedAtlasRulerIndex >= atlasRulers.length - 1}>下一位 →</button>
+              <span>{selectedAtlasRuler ? `${selectedAtlasRulerIndex + 1} / ${atlasPolityRulers.length} · ${selectedAtlasRuler.polity}` : `${atlasRulers.length} 位可选`}</span>
+              <button type="button" onClick={() => stepAtlasRuler(1)} disabled={selectedAtlasRulerIndex < 0 || selectedAtlasRulerIndex >= atlasPolityRulers.length - 1}>下一位 →</button>
             </div>
           </div>
 
-          <div className="atlas-ruler-lens" aria-live="polite">
-            {selectedAtlasRuler && atlasPhase ? (
+          <div className={`atlas-ruler-lens${rulerTerritoryState ? " territory-mode" : ""}`}>
+            {selectedAtlasRuler && rulerTerritoryState ? (
               <>
                 <div>
                   <span>{selectedAtlasRuler.polity} · {selectedAtlasRuler.reign}</span>
-                  <h3>{selectedAtlasRuler.name} · {atlasPhaseLabels[atlasPhase]}观察</h3>
+                  <h3>{selectedAtlasRuler.name} · {rulerMapMomentLabels[atlasRulerMoment]}版图示意</h3>
                 </div>
-                <p>{activeAtlas.phases[atlasPhase]}</p>
+                <div className="atlas-moment-switch" role="group" aria-label={`${selectedAtlasRuler.name}版图阶段`}>
+                  {rulerMapMoments.map((moment) => (
+                    <button
+                      key={moment}
+                      type="button"
+                      className={`atlas-moment-button${atlasRulerMoment === moment ? " active" : ""}`}
+                      onClick={() => setAtlasRulerMoment(moment)}
+                      aria-pressed={atlasRulerMoment === moment}
+                      aria-controls="atlas-region-inspector"
+                    >
+                      {rulerMapMomentLabels[moment]}
+                    </button>
+                  ))}
+                </div>
+                <p className="atlas-territory-summary" role="status" aria-live="polite" aria-atomic="true">{rulerTerritoryState.changeSummary}</p>
+                <div className="atlas-territory-badges" aria-label="版图解析说明">
+                  <span className="atlas-territory-badge" data-kind="source">版图来源 · {rulerTerritoryState.sourceLabel}</span>
+                  <span className="atlas-territory-badge" data-kind="confidence">史实可信度 · {territoryConfidenceLabels[rulerTerritoryState.confidence]}</span>
+                </div>
+                <p className="atlas-territory-trend" data-trend={rulerTerritoryState.trend}>
+                  阶段变化 · {territoryTrendLabels[rulerTerritoryState.trend]}
+                </p>
                 <div className="atlas-ruler-meta">
                   <small>
-                    以「{activeAtlasEra.name}」总览为底图；阶段由该君主在所属政权的承袭位置推定。社会风俗不会在换一位君主时瞬间重置。
+                    以「{activeAtlasEra.name}」精绘图为底图，按同一政权承袭与明确变化点生成区域级示意；材料不足时会沿用上一状态并明确标注，不代表疆界没有变化。
                   </small>
                   <button type="button" onClick={(event) => openRuler(selectedAtlasRuler, event.currentTarget)}>打开君王身份卡 →</button>
                 </div>
@@ -1300,7 +1347,7 @@ export default function Home() {
               <>
                 <div><span>DYNASTY OVERVIEW</span><h3>朝代总览 · 不归因于单一君主</h3></div>
                 <p>{activeAtlas.summary}</p>
-                <small>选择上方任一君主，可按其在所属政权的前、中、后段查看时代变化提示。</small>
+                <small>选择上方任一君主，可切换其即位时、统治中期与末期的版图状态；下方风气、文化与习俗仍作为朝代级背景阅读。</small>
               </>
             )}
           </div>
@@ -1309,8 +1356,12 @@ export default function Home() {
             <div className="atlas-map-panel">
               <div className="atlas-map-caption">
                 <div>
-                  <span>{activeAtlasMapAsset ? "IMAGE BASE + INTERACTIVE CUTOUTS" : "SCHEMATIC MAP"}</span>
-                  <strong>{activeAtlasEra.name}文化—地理示意</strong>
+                  <span>{selectedAtlasRuler ? "RULER TERRITORY + INTERACTIVE REGIONS" : activeAtlasMapAsset ? "IMAGE BASE + INTERACTIVE CUTOUTS" : "SCHEMATIC MAP"}</span>
+                  <strong>
+                    {selectedAtlasRuler
+                      ? `${selectedAtlasRuler.name} · ${rulerMapMomentLabels[atlasRulerMoment]}版图示意`
+                      : `${activeAtlasEra.name}文化—地理示意`}
+                  </strong>
                   {activeAtlasMapAsset ? <small className="atlas-map-credit">{activeAtlasMapAsset.credit}</small> : null}
                 </div>
                 <em className="atlas-map-disclaimer">历史示意 · 非精确疆界</em>
@@ -1318,7 +1369,7 @@ export default function Home() {
               <div
                 className={`atlas-map${activeAtlasMapAsset ? " has-image-base" : ""}`}
                 role="group"
-                aria-label={`${activeAtlasMapAsset?.alt ?? `${activeAtlasEra.name}文化地理示意`}；点击区域查看详情`}
+                aria-label={`${selectedAtlasRuler ? `${selectedAtlasRuler.name}${rulerMapMomentLabels[atlasRulerMoment]}版图示意` : activeAtlasMapAsset?.alt ?? `${activeAtlasEra.name}文化地理示意`}；点击区域查看详情`}
               >
                 {activeAtlasMapAsset ? (
                   <img
@@ -1334,7 +1385,7 @@ export default function Home() {
                   />
                 ) : null}
                 {activeAtlasRegionLayout.map((layout) => {
-                  const regionData = activeAtlas.regions[layout.key];
+                  const regionData = activeMapRegions[layout.key];
                   const isActive = Boolean(regionData && layout.key === resolvedAtlasRegionKey);
                   return (
                     <button
@@ -1352,7 +1403,7 @@ export default function Home() {
                       onClick={() => setAtlasRegionKey(layout.key)}
                       disabled={!regionData}
                       aria-pressed={isActive}
-                      aria-label={regionData ? `${layout.label}：${regionData.headline}，${atlasStatusLabels[regionData.status]}` : `${layout.label}：本期不作为主要观察区`}
+                      aria-label={regionData ? `${layout.label}：${regionData.headline}，${activeMapStatusLabels[regionData.status]}` : `${layout.label}：本期不作为主要观察区`}
                     >
                       {activeAtlasMapAsset ? (
                         <img
@@ -1376,9 +1427,9 @@ export default function Home() {
                 {activeAtlasMapAsset ? <span className="atlas-map-action-hint" aria-hidden="true">指向预览 · 轻点锁定</span> : null}
               </div>
               {activeAtlasMapAsset ? (
-                <div className="atlas-region-shortcuts" role="group" aria-label={`${activeAtlasEra.name}文化地图区域快捷选择`}>
+                <div className="atlas-region-shortcuts" role="group" aria-label={`${selectedAtlasRuler ? `${selectedAtlasRuler.name}版图` : `${activeAtlasEra.name}文化地图`}区域快捷选择`}>
                   {activeAtlasRegionLayout.map((layout) => {
-                    const regionData = activeAtlas.regions[layout.key];
+                    const regionData = activeMapRegions[layout.key];
                     if (!regionData) return null;
                     const isActive = layout.key === resolvedAtlasRegionKey;
                     return (
@@ -1388,7 +1439,8 @@ export default function Home() {
                         className={`status-${regionData.status}${isActive ? " active" : ""}`}
                         onClick={() => setAtlasRegionKey(layout.key)}
                         aria-pressed={isActive}
-                        aria-label={`${layout.label}：${regionData.headline}，${atlasStatusLabels[regionData.status]}`}
+                        aria-controls="atlas-region-inspector"
+                        aria-label={`${layout.label}：${regionData.headline}，${activeMapStatusLabels[regionData.status]}`}
                       >
                         <span>{layout.shortLabel}</span>
                         <small>{regionData.headline}</small>
@@ -1398,25 +1450,25 @@ export default function Home() {
                 </div>
               ) : null}
               <div className="atlas-legend" aria-label="地图图例">
-                {Object.entries(atlasStatusLabels).map(([status, label]) => (
+                {Object.entries(activeMapStatusLabels).map(([status, label]) => (
                   <span key={status}><i className={`status-${status}`} />{label}</span>
                 ))}
               </div>
             </div>
 
-            <aside className="atlas-inspector" aria-live="polite">
+            <aside id="atlas-region-inspector" className="atlas-inspector">
               {activeAtlasRegion && resolvedAtlasRegionKey ? (
                 <>
                   <div className="atlas-region-status">
                     <span>{activeAtlasRegionLayout.find((region) => region.key === resolvedAtlasRegionKey)?.label}</span>
-                    <em className={`status-${activeAtlasRegion.status}`}>{atlasStatusLabels[activeAtlasRegion.status]}</em>
+                    <em className={`status-${activeAtlasRegion.status}`}>{activeMapStatusLabels[activeAtlasRegion.status]}</em>
                   </div>
                   <h3>{activeAtlasRegion.headline}</h3>
                   <p className="atlas-region-detail">{activeAtlasRegion.detail}</p>
                   <div className="atlas-region-tags">
                     <span>{activeAtlasEra.name}</span>
                     <span>{selectedAtlasRuler?.name ?? "朝代总览"}</span>
-                    <span>{activeAtlas.confidence}可信度</span>
+                    <span>{rulerTerritoryState ? `${territoryConfidenceLabels[rulerTerritoryState.confidence]}可信度` : `${activeAtlas.confidence}可信度`}</span>
                   </div>
                 </>
               ) : (
@@ -1448,7 +1500,9 @@ export default function Home() {
             <div>
               <strong>读图说明</strong>
               <p>
-                本图是文化—地理关系示意，不采用现代国界逻辑。颜色分别表示长期核心、一般控制、交流联系、并立争夺与材料不确定；封国、羁縻、朝贡、军事影响和直接行政控制并不等同。
+                {selectedAtlasRuler
+                  ? "君主版图是在十二个宏观区域上的历史示意：颜色分别表示政权核心、有效控制、藩属或影响、同期政权或争夺，以及边界或实际控制存疑。短期占领、羁縻、朝贡和直接行政控制不会被混为一谈。"
+                  : "本图是文化—地理关系示意，不采用现代国界逻辑。颜色分别表示长期核心、一般控制、交流联系、并立争夺与材料不确定；封国、羁縻、朝贡、军事影响和直接行政控制并不等同。"}
               </p>
             </div>
             <details className="atlas-sources">

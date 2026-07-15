@@ -241,6 +241,79 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
   await access(new URL("../public/atlas/xia-cultural-map-v1.webp", import.meta.url));
 });
 
+test("resolves ruler territory through 66 polity baselines and three same-polity stages", async () => {
+  const [page, territory, catalog, atlas] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-territory.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/culture-atlas.ts", import.meta.url), "utf8"),
+  ]);
+
+  const catalogGroups = [...catalog.matchAll(/\{ eraId: "([^"]+)", polity: "([^"]+)", rulers: "([^"]+)" \}/g)]
+    .map(([, eraId, polity, rulers]) => ({ eraId, polity, rulers: rulers.split("|") }));
+  const catalogPolityKeys = catalogGroups.map(({ eraId, polity }) => `${eraId}:${polity}`);
+
+  const polityTemplates = [...territory.matchAll(
+    /^\s*\[polityKey\("([^"]+)", "([^"]+)"\)\]: template\("\1", "\2"/gm,
+  )].map(([, eraId, polity]) => `${eraId}:${polity}`);
+  assert.equal(catalogPolityKeys.length, 66, "the ruler catalogue should continue to expose 66 era-polity groups");
+  assert.equal(polityTemplates.length, 66, "every era-polity group should have one territory baseline");
+  assert.equal(new Set(polityTemplates).size, 66, "territory baselines should not be duplicated");
+  assert.deepEqual([...polityTemplates].sort(), [...catalogPolityKeys].sort());
+
+  const changeRules = [...territory.matchAll(
+    /^\s*\[rulerRuleKey\("([^"]+)", "([^"]+)", "([^"]+)"\)\]:/gm,
+  )].map(([, eraId, polity, ruler]) => ({ eraId, polity, ruler, key: `${eraId}:${polity}:${ruler}` }));
+  const catalogRulerKeys = new Set(catalogGroups.flatMap(({ eraId, polity, rulers }) =>
+    rulers.map((ruler) => `${eraId}:${polity}:${ruler}`),
+  ));
+  assert.ok(changeRules.length >= 40, "the sparse model should retain at least 40 historically meaningful change points");
+  assert.equal(new Set(changeRules.map(({ key }) => key)).size, changeRules.length, "ruler change rules should be unique");
+  for (const rule of changeRules) {
+    assert.ok(catalogRulerKeys.has(rule.key), `${rule.key} should refer to a catalogued ruler in the same polity`);
+  }
+
+  assert.match(territory, /export type RulerMapMoment = "accession" \| "middle" \| "end";/);
+  assert.match(territory, /const canonicalName = rulerOrEraId\.aliases\?\.\[0\] \?\? rulerOrEraId\.name;/, "curated short display names should still resolve catalogue-keyed territory rules");
+  assert.match(territory, /const momentOrder: RulerMapMoment\[\] = \["accession", "middle", "end"\];/);
+  assert.match(territory, /accession: "即位时",\s*middle: "统治中期",\s*end: "末期",/);
+  assert.match(page, /const rulerMapMoments: RulerMapMoment\[\] = \["accession", "middle", "end"\];/);
+  assert.match(page, /className="atlas-moment-switch" role="group"/);
+  assert.match(page, /rulerMapMoments\.map\(\(moment\) => \(/);
+  assert.match(page, /className=\{`atlas-moment-button/);
+  assert.match(page, /aria-pressed=\{atlasRulerMoment === moment\}/);
+  assert.match(page, /aria-controls="atlas-region-inspector"/);
+  assert.ok([...page.matchAll(/setAtlasRulerMoment\("accession"\)/g)].length >= 4, "era, ruler, overview, and neighbour changes should reset to accession");
+
+  assert.match(page, /atlasRulers\.filter\(\(ruler\) => ruler\.polity === selectedAtlasRuler\.polity\)/);
+  assert.match(page, /if \(!atlasPolityRulers\.length\) return;/);
+  assert.match(page, /setAtlasRulerId\(atlasPolityRulers\[nextIndex\]\.id\);/);
+  assert.match(territory, /\.filter\(\(candidate\) => candidate\.eraId === ruler\.eraId && candidate\.polity === ruler\.polity\)/);
+  assert.match(territory, /predecessor end -> current accession -> current middle -> current end/);
+
+  for (const label of ["政权核心", "有效控制", "藩属／影响", "同期政权／争夺", "边界／实控存疑"]) {
+    assert.match(page, new RegExp(label));
+  }
+  assert.match(page, /activeMapStatusLabels = selectedAtlasRuler \? territoryStatusLabels : atlasStatusLabels/);
+  assert.match(page, /Object\.entries\(activeMapStatusLabels\)/);
+  assert.match(page, /activeMapRegions = rulerTerritoryState\?\.regions \?\? activeAtlas\.regions/);
+  assert.match(page, /材料不足时会沿用上一状态并明确标注，不代表疆界没有变化/);
+  assert.match(territory, /材料有限 · 承袭\$\{predecessor\.name\}末期示意/);
+  assert.match(territory, /材料有限 · 沿用\$\{ruler\.polity\}政权基线/);
+  assert.match(territory, /当前沿用\$\{inheritedSourceLabel\}的宏观示意，不表示疆域保持不变/);
+  assert.match(territory, /沿用\$\{ruler\.polity\}政权模板示意，不表示疆域保持不变/);
+
+  assert.match(page, /cultureAtlasMapAssets\[atlasEraId\]/, "ruler mode should reuse the selected era's painted base map");
+  assert.doesNotMatch(territory, /\/atlas\//, "territory states should remain overlays instead of replacing painted base assets");
+  const generatedBaseMaps = [...atlas.matchAll(/generatedAtlasAsset\("([^"]+)",/g)].map((match) => match[1]);
+  assert.equal(generatedBaseMaps.length, 22);
+  assert.equal(new Set(generatedBaseMaps).size, 22);
+  assert.match(atlas, /src:\s*"\/atlas\/xia-cultural-map-v1\.webp"/);
+  for (const eraId of ["xia", ...generatedBaseMaps]) {
+    await access(new URL(`../public/atlas/${eraId}-cultural-map-v1.webp`, import.meta.url));
+  }
+});
+
 test("catalogues every ruler in the 23-part timeline without duplicate restoration cards", async () => {
   const catalog = await readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8");
   const groups = [...catalog.matchAll(/\{ eraId: "([^"]+)", polity: "([^"]+)", rulers: "([^"]+)" \}/g)]
