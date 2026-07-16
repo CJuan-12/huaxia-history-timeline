@@ -261,6 +261,11 @@ test("places literary figures and portraits on the cultural atlas", async () => 
   assert.ok([...figures.matchAll(/sourceUrls: \[/g)].length >= figureEraIds.length);
   assert.match(figures, /未采用现代想象图/);
   assert.match(figures, /本页尚未采用未经逐件核验的图像/);
+  assert.match(figures, /export const literaryWorkReadings/);
+  assert.ok([...figures.matchAll(/kind: "(?:全文|节选|导读)"/g)].length >= 30, "poetry reader should include a substantial first batch");
+  for (const title of ["《早发白帝城》", "《春望》", "《水调歌头·明月几时有》", "《天净沙·秋思》", "《长相思·山一程》"]) {
+    assert.match(figures, new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  }
 
   assert.match(page, /literaryFiguresByEra/);
   assert.match(page, /atlasFiguresVisible/);
@@ -268,6 +273,10 @@ test("places literary figures and portraits on the cultural atlas", async () => 
   assert.match(page, /className="atlas-figure-marker"/);
   assert.match(page, /id="atlas-figure-shortcuts"/);
   assert.match(page, /className="literary-dialog"/);
+  assert.match(page, /literaryWorkReadings/);
+  assert.match(page, /古诗词与代表作/);
+  assert.match(page, /className="poetry-reading"/);
+  assert.match(page, /查看原文出处/);
   assert.match(page, /aria-haspopup="dialog"/);
   assert.match(page, /本时期人物层 · 独立于君主三阶段版图/);
   assert.match(page, /名人画像层共 \{literaryFigureStats\.total\} 位/);

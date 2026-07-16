@@ -38,6 +38,7 @@ import {
 import {
   literaryFiguresByEra,
   literaryFigureStats,
+  literaryWorkReadings,
   type LiteraryFigure,
 } from "./literary-figures";
 
@@ -2003,15 +2004,39 @@ export default function Home() {
                 <div><dt>史料可信度</dt><dd>{selectedLiteraryFigure.evidenceLevel}</dd></div>
               </dl>
 
-              <section className="literary-works" aria-label="代表作">
-                <h3>代表作</h3>
+              <section className="literary-works" aria-label="古诗词与代表作">
+                <div className="literary-works-heading">
+                  <h3>古诗词与代表作</h3>
+                  <span>{selectedLiteraryFigure.works.filter((work) => literaryWorkReadings[work.title]).length} 篇可读</span>
+                </div>
                 <div>
-                  {selectedLiteraryFigure.works.map((work) => (
-                    <article key={work.title}>
-                      <strong>{work.title}</strong>
-                      {work.note ? <p>{work.note}</p> : null}
-                    </article>
-                  ))}
+                  {selectedLiteraryFigure.works.map((work) => {
+                    const reading = literaryWorkReadings[work.title];
+                    return (
+                      <details key={work.title} className={`literary-work-card${reading ? " has-reading" : ""}`}>
+                        <summary>
+                          <span>
+                            <strong>{work.title}</strong>
+                            {work.note ? <small>{work.note}</small> : null}
+                          </span>
+                          <em>{reading ? `查看${reading.kind}` : "查看说明"}</em>
+                        </summary>
+                        {reading ? (
+                          <div className="poetry-reading">
+                            <p>{reading.summary}</p>
+                            {reading.lines?.length ? (
+                              <blockquote>
+                                {reading.lines.map((line) => <span key={line}>{line}</span>)}
+                              </blockquote>
+                            ) : null}
+                            {reading.sourceUrl ? <a href={reading.sourceUrl} target="_blank" rel="noreferrer">查看原文出处 ↗</a> : null}
+                          </div>
+                        ) : (
+                          <p className="poetry-reading-empty">暂未收录正文；可通过下方资料依据继续查看原文、辑本或作品说明。</p>
+                        )}
+                      </details>
+                    );
+                  })}
                 </div>
               </section>
 
