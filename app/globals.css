@@ -6990,3 +6990,164 @@ summary {
     height: auto;
   }
 }
+/* Paper archive direction: book-like open motion and a stronger archive-room cabinet shell. */
+@keyframes archive-book-open {
+  0% {
+    opacity: 0;
+    transform: perspective(1500px) rotateY(-18deg) translateX(-24px) scale(0.965);
+    filter: drop-shadow(-24px 18px 30px rgb(47 33 18 / 0.08));
+  }
+  62% {
+    opacity: 1;
+    transform: perspective(1500px) rotateY(3deg) translateX(4px) scale(1.006);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1500px) rotateY(0) translateX(0) scale(1);
+    filter: drop-shadow(0 34px 70px rgb(47 33 18 / 0.24));
+  }
+}
+
+@keyframes archive-page-breathe {
+  from { transform: rotateY(-8deg); opacity: 0.72; }
+  to { transform: rotateY(0); opacity: 1; }
+}
+
+@keyframes archive-file-book-pull {
+  0% { transform: translateY(0) rotateX(0deg) scale(1); }
+  45% { transform: translateY(-10px) rotateX(7deg) scale(1.012); }
+  100% { transform: translateY(-18px) rotateX(0deg) scale(1.025); }
+}
+
+.ruler-dialog::backdrop {
+  background:
+    radial-gradient(circle at 50% 42%, rgb(246 232 199 / 0.36), transparent 34rem),
+    linear-gradient(90deg, rgb(40 30 18 / 0.52), rgb(40 30 18 / 0.34));
+  backdrop-filter: none;
+}
+
+.ruler-dialog[open] .ruler-dialog-shell {
+  animation: archive-book-open 520ms cubic-bezier(0.2, 0.82, 0.18, 1) both;
+  transform-origin: left center;
+}
+
+.ruler-dialog-shell {
+  background:
+    linear-gradient(90deg, rgb(224 211 185 / 0.88) 0 34%, transparent 34% 36%, rgb(255 252 244 / 0.98) 36%),
+    repeating-linear-gradient(0deg, rgb(105 77 43 / 0.035) 0 1px, transparent 1px 34px),
+    #fffaf0;
+  border: 1px solid rgb(124 92 55 / 0.42);
+  border-radius: 18px 28px 28px 18px;
+  box-shadow:
+    0 34px 90px rgb(30 22 13 / 0.38),
+    inset 18px 0 28px rgb(85 59 31 / 0.13),
+    inset -1px 0 0 rgb(255 255 255 / 0.74);
+  overflow: auto;
+  perspective: 1400px;
+}
+
+.ruler-dialog-shell::after {
+  background:
+    linear-gradient(90deg, rgb(85 59 31 / 0.22), rgb(255 255 255 / 0.38) 38%, rgb(85 59 31 / 0.13) 52%, transparent),
+    linear-gradient(180deg, transparent, rgb(85 59 31 / 0.1), transparent);
+  content: "";
+  inset: 0 auto 0 34.5%;
+  pointer-events: none;
+  position: absolute;
+  width: 28px;
+  z-index: 3;
+}
+
+.ruler-dialog[open] .ruler-profile {
+  animation: archive-page-breathe 520ms 90ms cubic-bezier(0.2, 0.82, 0.18, 1) both;
+  transform-origin: left center;
+}
+
+.ruler-dialog .ruler-portrait-large {
+  background:
+    linear-gradient(145deg, rgb(219 205 176 / 0.94), rgb(235 224 201 / 0.88)),
+    repeating-linear-gradient(90deg, rgb(126 96 58 / 0.07) 0 1px, transparent 1px 18px);
+  border-right: 1px solid rgb(126 96 58 / 0.28);
+}
+
+.ruler-dialog .ruler-profile {
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0.55), transparent 18%),
+    linear-gradient(180deg, #fffdf8, #fbf2e2);
+  box-shadow: inset 0 0 0 1px rgb(126 96 58 / 0.06);
+}
+
+.directory-grid .ruler-teaser-extracting,
+.ruler-teaser-extracting {
+  animation: archive-file-book-pull 300ms cubic-bezier(0.2, 0.82, 0.18, 1) forwards;
+  transform-origin: 18% 100%;
+}
+
+.archive-vault {
+  background:
+    linear-gradient(180deg, rgb(255 253 247 / 0.82), rgb(226 209 176 / 0.78)),
+    repeating-linear-gradient(90deg, rgb(101 70 35 / 0.16) 0 2px, transparent 2px 118px),
+    repeating-linear-gradient(0deg, rgb(101 70 35 / 0.12) 0 2px, transparent 2px 128px),
+    linear-gradient(135deg, #7a5830, #c2a170 42%, #6d4b27);
+  border: 1px solid rgb(91 62 33 / 0.48);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 0 0 8px rgb(91 62 33 / 0.08),
+    inset 0 26px 48px rgb(255 255 255 / 0.22),
+    inset 0 -32px 50px rgb(88 59 28 / 0.16),
+    0 26px 70px rgb(67 45 23 / 0.2);
+}
+
+.archive-vault::before {
+  background:
+    linear-gradient(90deg, rgb(63 42 22 / 0.18) 0 1px, transparent 1px 25%, rgb(63 42 22 / 0.14) 25% calc(25% + 1px), transparent calc(25% + 1px) 50%, rgb(63 42 22 / 0.14) 50% calc(50% + 1px), transparent calc(50% + 1px) 75%, rgb(63 42 22 / 0.14) 75% calc(75% + 1px), transparent calc(75% + 1px)),
+    repeating-linear-gradient(0deg, transparent 0 122px, rgb(63 42 22 / 0.2) 122px 124px),
+    radial-gradient(circle at 14% 12%, rgb(255 248 222 / 0.5), transparent 22rem);
+  opacity: 1;
+}
+
+.archive-vault::after {
+  background:
+    linear-gradient(135deg, #3f3328, #6f5030);
+  border: 1px solid rgb(255 236 190 / 0.22);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 10px 22px rgb(41 29 17 / 0.2);
+  content: "档案柜 · 拉开卷宗";
+}
+
+.archive-vault .methodology-card,
+.archive-vault .directory-controls,
+.archive-vault .directory-status,
+.archive-vault .archive-note {
+  background:
+    linear-gradient(180deg, rgb(255 252 244 / 0.9), rgb(245 235 215 / 0.82));
+  border-color: rgb(126 96 58 / 0.26);
+  box-shadow: 0 8px 22px rgb(72 52 28 / 0.07);
+  backdrop-filter: none;
+}
+
+.directory-grid {
+  background:
+    linear-gradient(180deg, rgb(92 61 30 / 0.22), transparent 20px),
+    repeating-linear-gradient(90deg, rgb(78 52 28 / 0.08) 0 1px, transparent 1px 25%),
+    repeating-linear-gradient(0deg, rgb(78 52 28 / 0.11) 0 1px, transparent 1px 124px),
+    rgb(235 219 190 / 0.66);
+  border-color: rgb(91 62 33 / 0.28);
+  box-shadow:
+    inset 0 14px 30px rgb(78 52 28 / 0.14),
+    inset 0 -10px 18px rgb(255 255 255 / 0.22);
+}
+
+.ruler-teaser.archive-spine .ruler-teaser-copy {
+  background:
+    linear-gradient(90deg, rgb(130 82 49 / 0.22) 0 16px, transparent 16px),
+    linear-gradient(90deg, rgb(172 119 62 / 0.18), transparent 40%),
+    linear-gradient(145deg, #fff7df, #e7d1a5);
+  border: 1px solid rgb(126 96 58 / 0.2);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.7),
+    inset 17px 0 0 rgb(157 51 40 / 0.16),
+    inset -14px 0 22px rgb(79 58 33 / 0.1),
+    0 10px 18px rgb(72 52 28 / 0.08);
+}

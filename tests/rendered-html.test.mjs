@@ -513,3 +513,11 @@ test("uses roomy workbench layouts without squeezing archive cards", async () =>
   assert.match(styles, /site-mode-constellation \.constellation-section \{[\s\S]*height: calc\(100svh - 70px\)/);
   assert.match(styles, /constellation-relations \{[\s\S]*overflow-x: auto/);
 });
+test("uses paper book opening motion and archive cabinet styling", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /@keyframes archive-book-open/);
+  assert.match(styles, /archive-file-book-pull/);
+  assert.match(styles, /content: "档案柜 · 拉开卷宗"/);
+  assert.match(styles, /backdrop-filter: none/);
+  assert.match(styles, /ruler-dialog-shell::after/);
+});
