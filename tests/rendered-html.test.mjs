@@ -4,19 +4,19 @@ import test from "node:test";
 
 const root = new URL("../", import.meta.url);
 
-async function render() {
+async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
   const { default: worker } = await import(workerUrl.href);
 
   return worker.fetch(
-    new Request("http://localhost/", { headers: { accept: "text/html" } }),
+    new Request(`http://localhost${pathname}`, { headers: { accept: "text/html" } }),
     { ASSETS: { fetch: async () => new Response("Not found", { status: 404 }) } },
     { waitUntil() {}, passThroughOnException() {} },
   );
 }
 
-test("server-renders the history timeline and featured rulers", async () => {
+test("server-renders the portal and separated feature pages", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -24,23 +24,35 @@ test("server-renders the history timeline and featured rulers", async () => {
   const html = await response.text();
   const readableHtml = html.replaceAll("<!-- -->", "");
   assert.match(readableHtml, /<title>华夏长卷｜中国古代历史时间轴<\/title>/);
-  assert.match(readableHtml, /中国古代历史横向时间轴/);
-  assert.match(readableHtml, /代表君王/);
-  assert.match(readableHtml, /秦始皇/);
-  assert.match(readableHtml, /君王档案馆/);
+  assert.match(readableHtml, /选择一种方式进入历史/);
+  assert.match(readableHtml, /朝代时间轴/);
+  assert.match(readableHtml, /文化版图/);
   assert.match(readableHtml, /帝王关系星谱/);
-  assert.match(readableHtml, /夏后氏世系星链/);
-  assert.match(readableHtml, /覆盖全部 23 个历史时期/);
-  assert.match(readableHtml, /全部 443 位/);
-  assert.match(readableHtml, /找到 443 位/);
-  assert.match(readableHtml, /暂无可靠传世画像/);
-  assert.match(readableHtml, /MBTI 为基于史料行为、兴趣与关系的候选推演/);
+  assert.match(readableHtml, /君王档案馆/);
+  assert.match(readableHtml, /href="\/timeline"/);
+  assert.match(readableHtml, /href="\/atlas"/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape|react-loading-skeleton/i);
+
+  const timelineResponse = await render("/timeline");
+  assert.equal(timelineResponse.status, 200);
+  const timelineHtml = (await timelineResponse.text()).replaceAll("<!-- -->", "");
+  assert.match(timelineHtml, /中国古代历史横向时间轴/);
+  assert.match(timelineHtml, /代表君王/);
+  assert.match(timelineHtml, /秦始皇/);
+  assert.match(timelineHtml, /君王档案/);
+
+  const rulersResponse = await render("/rulers");
+  assert.equal(rulersResponse.status, 200);
+  const rulersHtml = (await rulersResponse.text()).replaceAll("<!-- -->", "");
+  assert.match(rulersHtml, /君王档案馆/);
+  assert.match(rulersHtml, /收录 443 位/);
+  assert.match(rulersHtml, /MBTI 为基于史料行为、兴趣与关系的候选推演/);
+  assert.match(rulersHtml, /暂无可靠传世画像/);
 });
 
 test("keeps ruler profiles accessible and portrait assets local", async () => {
   const [page, profiles, portraitCatalog, catalog, constellations, lineage, lineageData, layout, packageJson, portraits] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/history-explorer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-profiles.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-portraits.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
@@ -150,7 +162,7 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
 
 test("keeps the 23-period cultural atlas complete, sourced, and reachable from the UI", async () => {
   const [page, atlas] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/history-explorer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/culture-atlas.ts", import.meta.url), "utf8"),
   ]);
 
@@ -244,7 +256,7 @@ test("keeps the 23-period cultural atlas complete, sourced, and reachable from t
 
 test("places literary figures and portraits on the cultural atlas", async () => {
   const [page, figures] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/history-explorer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/literary-figures.ts", import.meta.url), "utf8"),
   ]);
 
@@ -291,7 +303,7 @@ test("places literary figures and portraits on the cultural atlas", async () => 
 });
 test("resolves ruler territory through 66 polity baselines and three same-polity stages", async () => {
   const [page, territory, catalog, atlas] = await Promise.all([
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/history-explorer.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-territory.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/ruler-catalog.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/culture-atlas.ts", import.meta.url), "utf8"),
