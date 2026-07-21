@@ -17,6 +17,8 @@
   --focus: #245c90;
   --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
   --sans: Inter, "Noto Sans SC", "Source Han Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --motion-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 * {
@@ -66,6 +68,45 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+@keyframes page-rise-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes topbar-drift-in {
+  from { opacity: 0; transform: translateY(-14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes card-cascade-in {
+  from { opacity: 0; transform: translateY(22px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ink-sheen {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(160%) skewX(-18deg); }
+}
+
+@keyframes map-breathe {
+  0%, 100% { filter: saturate(1) contrast(1); }
+  50% { filter: saturate(1.06) contrast(1.025); }
+}
+
+@keyframes star-breathe {
+  0%, 100% { box-shadow: 0 0 0 7px rgb(187 146 93 / 0.08), 0 0 24px rgb(213 173 114 / 0.3); }
+  50% { box-shadow: 0 0 0 10px rgb(187 146 93 / 0.12), 0 0 34px rgb(213 173 114 / 0.46); }
+}
+
+@keyframes dialog-lift-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.975); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 .site-shell {
   min-height: 100vh;
   overflow: hidden;
@@ -4890,11 +4931,157 @@ footer span {
   }
 }
 
+
+.site-shell {
+  animation: page-rise-in 520ms var(--motion-soft) both;
+}
+
+.topbar {
+  animation: topbar-drift-in 460ms var(--motion-soft) both;
+}
+
+.brand-mark {
+  transition: transform 220ms var(--motion-soft), box-shadow 220ms ease;
+}
+
+.brand:hover .brand-mark,
+.brand:focus-visible .brand-mark {
+  box-shadow: 0 10px 24px rgb(157 51 40 / 0.18);
+  transform: rotate(-3deg) scale(1.04);
+}
+
+.portal-hero > *,
+.timeline-section,
+.culture-atlas-section,
+.constellation-section,
+.ruler-directory {
+  animation: card-cascade-in 560ms var(--motion-soft) both;
+}
+
+.portal-hero > :nth-child(2) { animation-delay: 70ms; }
+.portal-hero > :nth-child(3) { animation-delay: 140ms; }
+
+.portal-card,
+.era-panel,
+.ruler-teaser,
+.event-card,
+.atlas-overview,
+.constellation-panel,
+.methodology-card,
+.directory-controls,
+.directory-status,
+.archive-note {
+  will-change: transform;
+}
+
+.portal-card {
+  animation: card-cascade-in 560ms var(--motion-soft) both;
+  animation-delay: calc(var(--motion-index, 0) * 70ms + 110ms);
+}
+
+.portal-card:nth-child(1) { --motion-index: 0; }
+.portal-card:nth-child(2) { --motion-index: 1; }
+.portal-card:nth-child(3) { --motion-index: 2; }
+.portal-card:nth-child(4) { --motion-index: 3; }
+
+.portal-card::before,
+.event-card::before,
+.ruler-teaser::before {
+  background: linear-gradient(90deg, transparent, rgb(255 253 248 / 0.55), transparent);
+  content: "";
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transform: translateX(-120%) skewX(-18deg);
+  transition: opacity 180ms ease;
+  z-index: 2;
+}
+
+.portal-card:hover::before,
+.portal-card:focus-visible::before,
+.event-card:hover::before,
+.event-card:focus-within::before,
+.ruler-teaser:hover::before,
+.ruler-teaser:focus-visible::before {
+  animation: ink-sheen 760ms ease;
+  opacity: 1;
+}
+
+.ruler-teaser,
+.event-card {
+  position: relative;
+}
+
+.ruler-teaser-portrait img,
+.atlas-figure-marker-portrait img,
+.literary-portrait img {
+  transition: filter 260ms ease, transform 320ms var(--motion-soft);
+}
+
+.ruler-teaser:hover .ruler-teaser-portrait img,
+.ruler-teaser:focus-visible .ruler-teaser-portrait img {
+  filter: saturate(1.06) contrast(1.04);
+  transform: scale(1.045);
+}
+
+.event-card[open] .event-detail,
+.methodology-card[open] .methodology-body {
+  animation: card-cascade-in 320ms var(--motion-soft) both;
+}
+
+.atlas-map.has-image-base {
+  animation: map-breathe 7s ease-in-out infinite;
+}
+
+.atlas-region:not(:disabled) {
+  transform-origin: center;
+}
+
+.atlas-region-shortcuts button,
+.atlas-figure-shortcuts button,
+.atlas-era-tabs button,
+.constellation-tabs button,
+.era-jump button,
+.archive-entry,
+.directory-more,
+.dialog-close {
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 220ms ease, color 180ms ease, transform 220ms var(--motion-soft);
+}
+
+.atlas-region-shortcuts button:hover,
+.atlas-figure-shortcuts button:hover,
+.atlas-era-tabs button:hover,
+.constellation-tabs button:hover,
+.era-jump button:hover,
+.archive-entry:hover,
+.directory-more:hover {
+  transform: translateY(-2px);
+}
+
+.constellation-node > span {
+  animation: star-breathe 4.8s ease-in-out infinite;
+}
+
+.constellation-node:nth-of-type(3n + 1) > span { animation-delay: -1.2s; }
+.constellation-node:nth-of-type(3n + 2) > span { animation-delay: -2.4s; }
+
+.ruler-dialog[open] .ruler-dialog-shell,
+.literary-dialog[open] .literary-dialog-shell {
+  animation: dialog-lift-in 360ms var(--motion-soft) both;
+}
+
+.ruler-dialog[open]::backdrop,
+.literary-dialog[open]::backdrop {
+  animation: backdrop-fade-in 260ms ease both;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 
