@@ -5404,6 +5404,459 @@ body {
 .dialog-close {
   box-shadow: 0 10px 22px rgb(30 25 18 / 0.12);
 }
+
+/* Reading comfort pass: clearer hierarchy, calmer small text, better scan rhythm. */
+body {
+  font-size: 15px;
+  line-height: 1.72;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+summary {
+  letter-spacing: 0.01em;
+}
+
+.topbar-nav a,
+.topbar-nav button {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  padding: 9px 14px;
+}
+
+.brand strong {
+  font-size: 18px;
+  letter-spacing: 0.06em;
+}
+
+.brand small,
+.current-era span,
+.current-era em {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.portal-hero {
+  gap: 22px;
+  max-width: 1180px;
+}
+
+.portal-hero h1 {
+  letter-spacing: 0.015em;
+  line-height: 1.04;
+  max-width: 9em;
+}
+
+.portal-hero p:last-child {
+  font-size: clamp(17px, 1.8vw, 21px);
+  line-height: 1.78;
+  max-width: 42em;
+}
+
+.portal-grid {
+  gap: 18px;
+  max-width: 1180px;
+}
+
+.portal-card {
+  align-content: start;
+  gap: 14px;
+  padding: 28px;
+}
+
+.portal-card h2 {
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.12;
+  margin-top: 2px;
+}
+
+.portal-card p {
+  font-size: 14px;
+  line-height: 1.72;
+  margin: 2px 0 20px;
+}
+
+.portal-card strong {
+  font-size: 13px;
+}
+
+.portal-card > span,
+.eyebrow,
+.era-phase,
+.ruler-section-heading span,
+.events-heading small,
+.atlas-heading p,
+.atlas-overview-top > div:first-child > span,
+.constellation-heading p,
+.directory-heading p,
+.methodology-card summary span {
+  letter-spacing: 0.1em;
+}
+
+.hero-copy,
+.era-intro,
+.atlas-heading-copy p,
+.constellation-heading-copy p,
+.directory-heading > p {
+  font-size: clamp(16px, 1.55vw, 20px);
+  line-height: 1.82;
+  max-width: 44em;
+}
+
+.era-heading h2,
+.atlas-heading h2,
+.constellation-heading h2,
+.directory-heading h2 {
+  letter-spacing: 0.015em;
+  line-height: 1.08;
+}
+
+.era-years {
+  font-size: 15px;
+}
+
+.rulers-card p,
+.fall-card p,
+.event-card summary p,
+.event-detail,
+.atlas-overview-copy,
+.atlas-ruler-lens > p,
+.atlas-ruler-lens > div > p,
+.atlas-region-detail,
+.atlas-source-note p,
+.constellation-panel-heading > p,
+.constellation-relations li p,
+.methodology-card p,
+.methodology-dimensions p,
+.methodology-relations p,
+.archive-note p,
+.ruler-profile p,
+.literary-profile p,
+.poetry-reading p {
+  font-size: 14px;
+  line-height: 1.82;
+}
+
+.rulers-card summary span,
+.fall-card > span,
+.event-card time,
+.ruler-dynasty,
+.mbti-mini,
+.trait-list i,
+.ruler-open-label,
+.atlas-map-caption span,
+.atlas-map-credit,
+.atlas-map-disclaimer,
+.atlas-map-action-hint,
+.atlas-confidence,
+.atlas-mode-button,
+.atlas-ruler-nav button,
+.profile-atlas-link,
+.atlas-select-wrap > span,
+.atlas-ruler-nav > span,
+.atlas-territory-badge,
+.atlas-territory-trend,
+.atlas-ruler-meta,
+.constellation-legend,
+.constellation-edge-label,
+.constellation-node small,
+.directory-controls label > span,
+.directory-status span,
+.archive-note strong,
+.dialog-close,
+.literary-source-links a,
+.poetry-reading a {
+  letter-spacing: 0.04em;
+}
+
+.rulers-card summary span,
+.fall-card > span,
+.event-card time,
+.ruler-dynasty,
+.mbti-mini,
+.ruler-open-label,
+.atlas-map-caption span,
+.atlas-confidence,
+.atlas-territory-badge,
+.constellation-legend,
+.directory-controls label > span,
+.archive-note strong {
+  font-size: 10.5px;
+}
+
+.ruler-teaser-copy {
+  padding: 17px 18px 15px;
+}
+
+.ruler-teaser-copy strong {
+  font-size: 24px;
+  line-height: 1.22;
+}
+
+.ruler-teaser-copy em {
+  font-size: 12px;
+  line-height: 1.48;
+}
+
+.ruler-open-label {
+  font-size: 11px;
+}
+
+.event-grid {
+  gap: 16px;
+}
+
+.event-card summary {
+  min-height: 214px;
+  padding: 22px 22px 20px;
+}
+
+.event-card h3 {
+  font-size: clamp(22px, 2vw, 27px);
+  line-height: 1.28;
+}
+
+.expand-label {
+  bottom: 18px;
+  font-size: 12px;
+}
+
+.atlas-overview-top {
+  gap: 32px;
+  padding: 30px 32px 24px;
+}
+
+.atlas-overview-copy {
+  max-width: 58em;
+}
+
+.atlas-overview-top dl > div {
+  border-radius: 16px;
+  min-width: 132px;
+  padding: 11px 12px;
+}
+
+.atlas-overview-top dt {
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+
+.atlas-overview-top dd {
+  font-size: 14px;
+}
+
+.atlas-controls,
+.atlas-ruler-lens {
+  padding-inline: 32px;
+}
+
+.atlas-select {
+  border-radius: 999px;
+  font-size: 13px;
+  min-height: 42px;
+  padding-left: 15px;
+}
+
+.atlas-mode-button,
+.atlas-ruler-nav button,
+.profile-atlas-link,
+.atlas-moment-button {
+  font-size: 12px;
+  min-height: 42px;
+}
+
+.atlas-inspector h3,
+.atlas-culture-card h3,
+.constellation-panel-heading h3,
+.methodology-title h3,
+.directory-status strong {
+  line-height: 1.22;
+}
+
+.atlas-map-caption strong {
+  font-size: 18px;
+}
+
+.atlas-map-disclaimer,
+.atlas-map-action-hint {
+  font-size: 9px;
+}
+
+.atlas-region > small {
+  font-size: 0.76em;
+}
+
+.atlas-culture-grid {
+  gap: 1px;
+}
+
+.atlas-culture-card {
+  padding: 25px 26px 28px;
+}
+
+.atlas-culture-card h3 {
+  font-size: 19px;
+}
+
+.atlas-culture-card li {
+  font-size: 12.5px;
+  line-height: 1.78;
+}
+
+.constellation-panel-heading {
+  gap: 20px 28px;
+}
+
+.constellation-panel-heading h3 {
+  font-size: clamp(25px, 3vw, 36px);
+}
+
+.constellation-node strong {
+  font-size: 16px;
+}
+
+.constellation-relations li {
+  padding: 20px 22px;
+}
+
+.directory-heading > p {
+  max-width: 48em;
+}
+
+.directory-controls {
+  gap: 14px;
+  padding: 20px;
+}
+
+.directory-controls input,
+.directory-controls select {
+  border-radius: 999px;
+  font-size: 14px;
+  min-height: 46px;
+  padding: 0 16px;
+}
+
+.directory-status {
+  align-items: center;
+  padding: 18px 20px;
+}
+
+.directory-grid {
+  gap: 16px;
+}
+
+.methodology-card summary {
+  padding: 22px 24px;
+}
+
+.methodology-card summary strong {
+  font-size: 22px;
+}
+
+.methodology-body {
+  padding: 24px;
+}
+
+.ruler-dialog-shell,
+.literary-dialog-shell {
+  line-height: 1.75;
+}
+
+.ruler-profile h2,
+.literary-profile h2 {
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 900px) {
+  .topbar-nav {
+    max-width: min(62vw, 520px);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .topbar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar-nav a,
+  .topbar-nav button {
+    flex: 0 0 auto;
+  }
+
+  .atlas-overview-top {
+    display: grid;
+  }
+
+  .atlas-overview-top dl {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+
+  .topbar {
+    border-radius: 24px;
+    margin-inline: 10px;
+  }
+
+  .topbar-nav {
+    max-width: calc(100vw - 132px);
+  }
+
+  .topbar-nav a,
+  .topbar-nav button {
+    font-size: 10.5px;
+    padding: 8px 10px;
+  }
+
+  .portal-hero h1,
+  .hero h1 {
+    line-height: 1.08;
+  }
+
+  .portal-card {
+    min-height: 0;
+    padding: 24px;
+    rotate: 0deg !important;
+  }
+
+  .portal-card p,
+  .event-card summary p,
+  .event-detail,
+  .rulers-card p,
+  .fall-card p,
+  .atlas-overview-copy,
+  .atlas-region-detail,
+  .constellation-relations li p,
+  .archive-note p {
+    font-size: 13.5px;
+    line-height: 1.78;
+  }
+
+  .era-meta-grid,
+  .event-grid,
+  .atlas-culture-grid,
+  .constellation-relations,
+  .methodology-dimensions,
+  .methodology-relations {
+    gap: 12px;
+  }
+
+  .ruler-teaser-copy strong {
+    font-size: 21px;
+  }
+
+  .directory-controls input,
+  .directory-controls select {
+    font-size: 13px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
