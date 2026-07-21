@@ -6805,3 +6805,188 @@ summary {
     grid-template-columns: 1fr;
   }
 }
+/* Second pass: avoid cramped workbench layouts; use roomy visual-first shelves/canvases. */
+.site-mode-archive .ruler-directory {
+  height: auto;
+  min-height: calc(100svh - 72px);
+  overflow: visible;
+}
+
+.site-mode-archive .directory-heading {
+  grid-template-columns: minmax(220px, 0.34fr) minmax(0, 0.66fr);
+}
+
+.site-mode-archive .archive-vault {
+  grid-template-rows: auto auto auto minmax(260px, 1fr) auto auto;
+  min-height: min(760px, calc(100svh - 150px));
+  overflow: visible;
+}
+
+.site-mode-archive .methodology-card summary {
+  padding-block: 15px;
+}
+
+.site-mode-archive .archive-vault .directory-controls {
+  grid-template-columns: minmax(280px, 1.2fr) minmax(190px, 0.7fr) minmax(190px, 0.7fr);
+  margin: 14px 0;
+}
+
+.site-mode-archive .archive-vault .directory-status {
+  border-radius: 24px;
+  margin: 0 0 14px;
+  min-height: 64px;
+  padding: 14px 18px;
+}
+
+.site-mode-archive .directory-grid {
+  align-items: stretch;
+  display: grid;
+  gap: 16px;
+  grid-auto-columns: minmax(220px, 250px);
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  grid-template-rows: repeat(2, minmax(100px, 1fr));
+  max-height: clamp(260px, 38vh, 360px);
+  min-height: clamp(260px, 38vh, 360px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-inline: contain;
+  padding: 28px 24px 24px;
+  scroll-padding-inline: 24px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+
+.site-mode-archive .directory-grid::-webkit-scrollbar {
+  display: block;
+  height: 8px;
+}
+
+.site-mode-archive .directory-grid::-webkit-scrollbar-thumb {
+  background: rgb(157 51 40 / 0.34);
+  border-radius: 999px;
+}
+
+.site-mode-archive .directory-grid .ruler-teaser.archive-spine {
+  min-height: 100px;
+  scroll-snap-align: start;
+}
+
+.site-mode-archive .directory-more {
+  margin-top: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.site-mode-archive .archive-note {
+  background: rgb(255 253 248 / 0.7);
+  border-radius: 22px;
+  max-height: none;
+  overflow: hidden;
+}
+
+.site-mode-constellation .constellation-section {
+  height: calc(100svh - 70px);
+  min-height: 680px;
+  overflow: hidden;
+  padding: 12px clamp(18px, 2.4vw, 30px) 16px;
+}
+
+.site-mode-constellation .constellation-heading {
+  border-bottom-color: rgb(228 211 177 / 0.14);
+  grid-template-columns: minmax(220px, 0.38fr) minmax(0, 0.62fr);
+  min-height: 72px;
+  padding-bottom: 10px;
+}
+
+.site-mode-constellation .constellation-heading h2 {
+  font-size: clamp(26px, 3vw, 42px);
+}
+
+.site-mode-constellation .constellation-heading-copy button {
+  margin-top: 6px;
+}
+
+.site-mode-constellation .constellation-tabs {
+  min-height: 58px;
+  overflow-y: hidden;
+}
+
+.site-mode-constellation .constellation-tabs button {
+  flex-basis: clamp(154px, 14vw, 196px);
+  min-height: 50px;
+  padding: 8px 12px;
+}
+
+.site-mode-constellation .constellation-tabs strong {
+  font-size: 15px;
+}
+
+.site-mode-constellation .constellation-panel {
+  grid-template-rows: auto auto auto minmax(0, 1fr) minmax(64px, 11vh);
+  height: 100%;
+  min-height: 0;
+}
+
+.site-mode-constellation .constellation-panel-heading {
+  grid-template-columns: minmax(210px, auto) auto minmax(0, 1fr);
+  min-height: 58px;
+  padding: 10px 16px 8px;
+}
+
+.site-mode-constellation .constellation-panel-heading h3 {
+  font-size: clamp(20px, 2vw, 28px);
+}
+
+.site-mode-constellation .constellation-legend {
+  gap: 8px 18px;
+  padding-block: 7px;
+}
+
+.site-mode-constellation .constellation-canvas-tools {
+  min-height: 38px;
+  padding-block: 6px;
+}
+
+.site-mode-constellation .constellation-viewport {
+  height: 100%;
+  min-height: 360px;
+}
+
+.site-mode-constellation .constellation-map {
+  min-height: 560px;
+}
+
+.site-mode-constellation .constellation-relations {
+  display: grid;
+  grid-auto-columns: minmax(260px, 1fr);
+  grid-auto-flow: column;
+  grid-template-columns: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x proximity;
+}
+
+.site-mode-constellation .constellation-relations li {
+  scroll-snap-align: start;
+}
+
+@media (max-width: 1180px) {
+  .site-mode-archive .archive-vault .directory-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .site-mode-archive .directory-grid {
+    grid-auto-columns: minmax(210px, 78vw);
+  }
+
+  .site-mode-constellation .constellation-section {
+    height: auto;
+    min-height: calc(100svh - 70px);
+    overflow: visible;
+  }
+
+  .site-mode-constellation .constellation-panel {
+    height: auto;
+  }
+}

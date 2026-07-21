@@ -506,3 +506,10 @@ test("uses page-mode workbench layouts and smoother page transitions", async () 
   assert.match(styles, /@keyframes soft-page-enter/);
   assert.match(styles, /sheet-turn-in/);
 });
+test("uses roomy workbench layouts without squeezing archive cards", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /grid-auto-flow: column/);
+  assert.match(styles, /grid-template-rows: repeat\(2, minmax\(100px, 1fr\)\)/);
+  assert.match(styles, /site-mode-constellation \.constellation-section \{[\s\S]*height: calc\(100svh - 70px\)/);
+  assert.match(styles, /constellation-relations \{[\s\S]*overflow-x: auto/);
+});
