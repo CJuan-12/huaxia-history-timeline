@@ -7,6 +7,7 @@ const entries = [
   {
     href: "/timeline",
     eyebrow: "TIMELINE",
+    glyph: "↔",
     title: "朝代时间轴",
     text: "横向滑动查看 23 个历史时期，展开大事记、代表君王和覆灭原因。",
     stat: "23 个时期",
@@ -14,6 +15,7 @@ const entries = [
   {
     href: "/atlas",
     eyebrow: "ATLAS",
+    glyph: "◌",
     title: "文化版图",
     text: "按朝代或君主统治阶段查看版图、地域风气、名人画像和古诗词。",
     stat: `${literaryFigureStats.total} 位名人`,
@@ -21,6 +23,7 @@ const entries = [
   {
     href: "/constellation",
     eyebrow: "CONSTELLATION",
+    glyph: "✦",
     title: "帝王关系星谱",
     text: "用可拖拽的关系图查看继承、家族、共治和冲突。",
     stat: "关系网络",
@@ -28,6 +31,7 @@ const entries = [
   {
     href: "/rulers",
     eyebrow: "ARCHIVE",
+    glyph: "☉",
     title: "君王档案馆",
     text: "搜索全部君主，查看身份、母亲来源、关系行为和 MBTI 推演。",
     stat: `${catalogStats.total} 位君主`,
@@ -61,7 +65,7 @@ export default function Home() {
       <section className="portal-grid" aria-label="功能入口">
         {entries.map((entry, index) => (
           <a className="portal-card" href={`${publicBasePath}${entry.href}`} key={entry.href}>
-            <span>{entry.eyebrow}</span>
+            <span className="portal-card-eyebrow"><b aria-hidden="true">{entry.glyph}</b>{entry.eyebrow}</span>
             <h2>{entry.title}</h2>
             <p>{entry.text}</p>
             <strong>{entry.stat}</strong>
