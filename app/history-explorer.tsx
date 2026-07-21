@@ -549,16 +549,20 @@ function RulerTeaser({
   ruler,
   onOpen,
   compact = false,
+  extracting = false,
 }: {
   ruler: CatalogRulerProfile;
   onOpen: (ruler: CatalogRulerProfile, opener: HTMLButtonElement) => void;
   compact?: boolean;
+  extracting?: boolean;
 }) {
   return (
     <button
-      className={`ruler-teaser${compact ? " ruler-teaser-compact" : ""}`}
+      className={`ruler-teaser${compact ? " ruler-teaser-compact" : ""}${extracting ? " ruler-teaser-extracting" : ""}`}
       type="button"
       aria-haspopup="dialog"
+      aria-busy={extracting || undefined}
+      data-archive-file={ruler.id}
       onClick={(event) => onOpen(ruler, event.currentTarget)}
     >
       <span className="ruler-teaser-portrait">
@@ -596,6 +600,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
   const literaryDialogRef = useRef<HTMLDialogElement>(null);
   const rulerOpenerRef = useRef<HTMLButtonElement | null>(null);
   const literaryOpenerRef = useRef<HTMLButtonElement | null>(null);
+  const extractTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const panelRefs = useRef<Array<HTMLElement | null>>([]);
   const wheelSettleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragRef = useRef({
@@ -624,6 +629,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
   const constellationDragRef = useRef({ active: false, startX: 0, startY: 0, scrollLeft: 0, scrollTop: 0 });
   const [constellationDragging, setConstellationDragging] = useState(false);
   const [selectedRuler, setSelectedRuler] = useState<CatalogRulerProfile | null>(null);
+  const [extractingRulerId, setExtractingRulerId] = useState<string | null>(null);
   const [selectedLiteraryFigure, setSelectedLiteraryFigure] = useState<LiteraryFigure | null>(null);
   const [atlasFiguresVisible, setAtlasFiguresVisible] = useState(true);
   const [rulerQuery, setRulerQuery] = useState("");
@@ -806,6 +812,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
   useEffect(() => () => {
     if (wheelSettleRef.current) clearTimeout(wheelSettleRef.current);
     if (constellationTabSettleRef.current) clearTimeout(constellationTabSettleRef.current);
+    if (extractTimeoutRef.current) clearTimeout(extractTimeoutRef.current);
   }, []);
 
   useEffect(() => {
@@ -924,7 +931,16 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
 
   const openRuler = (ruler: CatalogRulerProfile, opener: HTMLButtonElement) => {
     rulerOpenerRef.current = opener;
-    setSelectedRuler(ruler);
+    if (extractTimeoutRef.current) clearTimeout(extractTimeoutRef.current);
+    if (!opener.classList.contains("ruler-teaser")) {
+      setSelectedRuler(ruler);
+      return;
+    }
+    setExtractingRulerId(ruler.id);
+    extractTimeoutRef.current = setTimeout(() => {
+      setSelectedRuler(ruler);
+      setExtractingRulerId(null);
+    }, 260);
   };
 
   const openLiteraryFigure = (figure: LiteraryFigure, opener: HTMLButtonElement) => {
@@ -1323,7 +1339,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
                   </div>
                   <div className="ruler-grid">
                     {(featuredRulersByEra[era.id] ?? []).map((ruler) => (
-                      <RulerTeaser key={ruler.id} ruler={ruler} onOpen={openRuler} />
+                      <RulerTeaser key={ruler.id} ruler={ruler} onOpen={openRuler} extracting={extractingRulerId === ruler.id} />
                     ))}
                   </div>
                   <div className="era-ruler-more">
@@ -1898,6 +1914,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
           </p>
         </div>
 
+        <div className="archive-vault" aria-label="君王档案柜">
         <details className="methodology-card">
           <summary>
             <div>
@@ -1995,7 +2012,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
           <>
             <div className="directory-grid">
               {filteredRulers.slice(0, visibleRulerCount).map((ruler) => (
-                <RulerTeaser key={ruler.id} ruler={ruler} onOpen={openRuler} compact />
+                <RulerTeaser key={ruler.id} ruler={ruler} onOpen={openRuler} compact extracting={extractingRulerId === ruler.id} />
               ))}
             </div>
             {visibleRulerCount < filteredRulers.length ? (
@@ -2017,6 +2034,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
             有可靠公版来源的画像会显示图像与出处；其余人物明确标注“暂无可靠传世画像”。MBTI 现已覆盖全部人物，其中中等置信 {catalogStats.mbtiMedium} 位、低置信候选 {catalogStats.mbtiLow} 位（含 {catalogStats.mbtiStructural} 位结构代理），并逐项标明情绪、君臣、伴侣、宗族与对外关系是否缺少直接记录。
           </p>
         </aside>
+        </div>
       </section>
       ) : null}
 

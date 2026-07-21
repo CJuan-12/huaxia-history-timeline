@@ -72,7 +72,9 @@ test("keeps ruler profiles accessible and portrait assets local", async () => {
   assert.match(page, /handleConstellationTabsScroll/);
   assert.match(page, /handleConstellationTabsWheel/);
   assert.match(page, /可自由滚动和拖拽的帝王关系星谱/);
-  assert.match(page, /onClick=\{\(event\) => openRuler\(ruler, event\.currentTarget\)\}/);
+  assert.match(page, /data-archive-file=\{ruler\.id\}/);
+  assert.match(page, /ruler-teaser-extracting/);
+  assert.match(page, /classList\.contains\("ruler-teaser"\)/);
   assert.match(page, /aria-haspopup="dialog"/);
   assert.match(page, /onCancel=/);
   assert.match(page, /非心理诊断/);

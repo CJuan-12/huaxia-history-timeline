@@ -5857,6 +5857,288 @@ summary {
     font-size: 13px;
   }
 }
+
+/* Archive museum shell: cabinet-like directory and file extraction interaction. */
+@keyframes archive-file-pull {
+  0% { transform: translateY(0) scale(1); }
+  48% { transform: translateY(-14px) scale(1.018); }
+  100% { transform: translateY(-24px) scale(1.03); }
+}
+
+@keyframes archive-stamp-pop {
+  from { opacity: 0; transform: translateY(8px) rotate(-6deg) scale(0.88); }
+  to { opacity: 1; transform: translateY(0) rotate(-6deg) scale(1); }
+}
+
+.ruler-directory {
+  background:
+    radial-gradient(circle at 14% 12%, rgb(216 123 82 / 0.11), transparent 26rem),
+    radial-gradient(circle at 88% 8%, rgb(79 138 114 / 0.1), transparent 28rem),
+    linear-gradient(180deg, rgb(60 43 24 / 0.035), transparent 18rem),
+    var(--paper);
+}
+
+.ruler-directory::before {
+  background:
+    linear-gradient(90deg, rgb(91 62 33 / 0.16) 1px, transparent 1px),
+    linear-gradient(rgb(91 62 33 / 0.08) 1px, transparent 1px);
+  background-size: 86px 100%, 100% 72px;
+  content: "";
+  inset: 0;
+  mask-image: linear-gradient(180deg, transparent, #000 10%, #000 88%, transparent);
+  opacity: 0.35;
+  pointer-events: none;
+  position: absolute;
+}
+
+.directory-heading {
+  position: relative;
+  z-index: 1;
+}
+
+.directory-heading > div {
+  position: relative;
+}
+
+.directory-heading > div::after {
+  background: rgb(157 51 40 / 0.1);
+  border: 1px solid rgb(157 51 40 / 0.25);
+  border-radius: 999px;
+  color: var(--cinnabar-dark);
+  content: "OPEN ARCHIVES";
+  display: inline-flex;
+  font-family: var(--sans);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  margin-top: 14px;
+  padding: 7px 11px;
+}
+
+.archive-vault {
+  background:
+    linear-gradient(180deg, rgb(255 253 248 / 0.74), rgb(234 221 196 / 0.66)),
+    repeating-linear-gradient(90deg, rgb(113 82 45 / 0.1) 0 1px, transparent 1px 74px);
+  border: 1px solid rgb(126 96 58 / 0.34);
+  border-radius: 34px;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.42),
+    inset 0 22px 55px rgb(121 83 42 / 0.08),
+    0 28px 72px rgb(67 45 23 / 0.15);
+  margin-top: 28px;
+  overflow: hidden;
+  padding: clamp(18px, 3vw, 28px);
+  position: relative;
+  z-index: 1;
+}
+
+.archive-vault::before {
+  background:
+    linear-gradient(90deg, transparent, rgb(255 255 255 / 0.34), transparent),
+    linear-gradient(180deg, rgb(92 61 30 / 0.18), transparent 22%, transparent 78%, rgb(92 61 30 / 0.14));
+  content: "";
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+.archive-vault::after {
+  background: rgb(37 31 24 / 0.82);
+  border-radius: 999px;
+  color: #fff5dc;
+  content: "档案柜 · 点击抽出卷宗";
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 8px 12px;
+  position: absolute;
+  right: clamp(18px, 3vw, 30px);
+  top: clamp(18px, 3vw, 30px);
+  z-index: 2;
+}
+
+.archive-vault > * {
+  position: relative;
+  z-index: 1;
+}
+
+.archive-vault .methodology-card,
+.archive-vault .directory-controls,
+.archive-vault .directory-status,
+.archive-vault .archive-note {
+  backdrop-filter: blur(10px);
+  background: rgb(255 253 248 / 0.72);
+  border-color: rgb(126 96 58 / 0.24);
+}
+
+.archive-vault .directory-controls {
+  margin-top: 22px;
+}
+
+.archive-vault .directory-status {
+  background:
+    linear-gradient(90deg, rgb(157 51 40 / 0.08), transparent 70%),
+    rgb(255 253 248 / 0.72);
+}
+
+.directory-grid {
+  background:
+    linear-gradient(180deg, rgb(88 59 28 / 0.18), transparent 22px),
+    repeating-linear-gradient(180deg, rgb(95 66 34 / 0.12) 0 1px, transparent 1px 156px);
+  border: 1px solid rgb(126 96 58 / 0.22);
+  border-radius: 28px;
+  box-shadow: inset 0 18px 38px rgb(84 55 26 / 0.08);
+  padding: 22px;
+  position: relative;
+}
+
+.directory-grid::before {
+  background: linear-gradient(180deg, rgb(78 52 28 / 0.28), rgb(78 52 28 / 0));
+  border-radius: 999px;
+  content: "";
+  height: 10px;
+  left: 24px;
+  position: absolute;
+  right: 24px;
+  top: 12px;
+}
+
+.directory-grid .ruler-teaser {
+  background:
+    linear-gradient(90deg, rgb(128 87 45 / 0.16) 0 10px, transparent 10px),
+    radial-gradient(circle at 92% 12%, rgb(157 51 40 / 0.1), transparent 25%),
+    linear-gradient(145deg, #fffaf0, #eadcc1);
+  border-color: rgb(130 93 54 / 0.36);
+  box-shadow:
+    inset 11px 0 0 rgb(157 51 40 / 0.12),
+    0 10px 18px rgb(70 48 24 / 0.08);
+  overflow: visible;
+  transform-origin: 20% 100%;
+}
+
+.directory-grid .ruler-teaser::after {
+  background: #ead4a7;
+  border: 1px solid rgb(126 96 58 / 0.28);
+  border-bottom: 0;
+  border-radius: 12px 12px 0 0;
+  color: var(--cinnabar-dark);
+  content: attr(data-archive-file);
+  font-size: 0;
+  height: 18px;
+  left: 26px;
+  position: absolute;
+  top: -18px;
+  width: 72px;
+  z-index: -1;
+}
+
+.directory-grid .ruler-teaser:hover,
+.directory-grid .ruler-teaser:focus-visible {
+  box-shadow:
+    inset 11px 0 0 rgb(157 51 40 / 0.16),
+    0 20px 38px rgb(70 48 24 / 0.16);
+  transform: translateY(-8px) rotate(-0.8deg);
+}
+
+.directory-grid .ruler-teaser-extracting {
+  animation: archive-file-pull 260ms var(--motion-soft) forwards;
+  border-color: var(--cinnabar);
+  box-shadow:
+    inset 11px 0 0 rgb(157 51 40 / 0.24),
+    0 28px 52px rgb(70 48 24 / 0.2);
+  z-index: 4;
+}
+
+.directory-grid .ruler-teaser-extracting .ruler-open-label::after {
+  animation: archive-stamp-pop 180ms ease both;
+  background: rgb(157 51 40 / 0.1);
+  border: 1px solid rgb(157 51 40 / 0.36);
+  border-radius: 999px;
+  color: var(--cinnabar-dark);
+  content: "正在抽出";
+  display: inline-flex;
+  font-size: 10px;
+  font-weight: 800;
+  margin-left: 8px;
+  padding: 4px 7px;
+}
+
+.directory-grid .ruler-teaser-portrait {
+  background:
+    linear-gradient(180deg, rgb(118 79 37 / 0.1), transparent),
+    var(--paper-deep);
+}
+
+.directory-grid .ruler-teaser-portrait small {
+  background: rgb(255 253 248 / 0.42);
+}
+
+.ruler-dialog {
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 3vw, 36px);
+}
+
+.ruler-dialog[open] {
+  display: grid;
+}
+
+.ruler-dialog-shell {
+  border: 1px solid rgb(126 96 58 / 0.38);
+  box-shadow:
+    0 34px 88px rgb(19 16 12 / 0.34),
+    inset 0 0 0 1px rgb(255 255 255 / 0.32);
+  margin: auto;
+  max-height: min(88dvh, 900px);
+}
+
+.ruler-dialog-shell::before {
+  background: rgb(157 51 40 / 0.09);
+  border: 1px solid rgb(157 51 40 / 0.28);
+  border-radius: 999px;
+  color: var(--cinnabar-dark);
+  content: "PERSONAL FILE";
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  padding: 6px 9px;
+  position: absolute;
+  right: clamp(54px, 6vw, 78px);
+  top: clamp(18px, 3vw, 26px);
+  transform: rotate(3deg);
+  z-index: 4;
+}
+
+@media (max-width: 640px) {
+  .archive-vault {
+    border-radius: 24px;
+    margin-inline: -8px;
+    padding: 16px;
+  }
+
+  .archive-vault::after {
+    display: none;
+  }
+
+  .directory-grid {
+    border-radius: 22px;
+    padding: 18px 12px 14px;
+  }
+
+  .directory-grid .ruler-teaser:hover,
+  .directory-grid .ruler-teaser:focus-visible {
+    transform: translateY(-4px);
+  }
+
+  .ruler-dialog {
+    padding: 10px;
+  }
+
+  .ruler-dialog-shell::before {
+    right: 58px;
+    top: 14px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
