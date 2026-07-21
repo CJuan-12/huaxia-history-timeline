@@ -566,6 +566,9 @@ function RulerTeaser({
       data-archive-file={ruler.id}
       onClick={(event) => onOpen(ruler, event.currentTarget)}
     >
+      <span className="archive-spine-avatar" aria-hidden="true">
+        <RulerPortrait ruler={ruler} />
+      </span>
       <span className="ruler-teaser-copy">
         <span className="archive-spine-meta">{ruler.reign}</span>
         <strong>{ruler.name}</strong>

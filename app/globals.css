@@ -6264,3 +6264,104 @@ summary {
     font-size: 21px;
   }
 }
+/* Small profile-style avatars for closed ruler archive files. */
+.ruler-teaser.archive-spine {
+  align-items: center;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.ruler-teaser.archive-spine.ruler-teaser-compact {
+  grid-template-columns: 50px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.archive-spine-avatar {
+  align-items: center;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 35% 25%, rgb(255 253 248 / 0.86), transparent 38%),
+    linear-gradient(145deg, rgb(157 51 40 / 0.22), rgb(76 96 83 / 0.22)),
+    var(--paper-deep);
+  border: 2px solid rgb(255 253 248 / 0.86);
+  border-radius: 999px;
+  box-shadow:
+    0 8px 18px rgb(70 48 24 / 0.16),
+    0 0 0 1px rgb(126 96 58 / 0.28);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  transform: rotate(-2deg);
+  width: 58px;
+  z-index: 1;
+}
+
+.ruler-teaser.archive-spine.ruler-teaser-compact .archive-spine-avatar {
+  width: 50px;
+}
+
+.archive-spine-avatar::after {
+  border: 1px solid rgb(255 255 255 / 0.45);
+  border-radius: inherit;
+  content: "";
+  inset: 4px;
+  pointer-events: none;
+  position: absolute;
+}
+
+.archive-spine-avatar img,
+.archive-spine-avatar .portrait-placeholder {
+  border-radius: inherit;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 16%;
+  width: 100%;
+}
+
+.archive-spine-avatar .portrait-placeholder {
+  min-height: 0;
+}
+
+.archive-spine-avatar .portrait-placeholder::before,
+.archive-spine-avatar .portrait-placeholder::after {
+  display: none;
+}
+
+.archive-spine-avatar .portrait-placeholder b {
+  font-size: 24px;
+}
+
+.archive-spine-avatar .portrait-placeholder small {
+  display: none;
+}
+
+.ruler-teaser.archive-spine .ruler-teaser-copy {
+  min-width: 0;
+  padding-left: 24px;
+}
+
+.ruler-teaser.archive-spine:hover .archive-spine-avatar,
+.ruler-teaser.archive-spine:focus-visible .archive-spine-avatar {
+  transform: rotate(0deg) scale(1.06);
+  transition: transform 220ms var(--motion-soft), box-shadow 220ms ease;
+}
+
+@media (max-width: 640px) {
+  .ruler-teaser.archive-spine,
+  .ruler-teaser.archive-spine.ruler-teaser-compact {
+    grid-template-columns: 46px minmax(0, 1fr);
+    padding: 12px;
+  }
+
+  .archive-spine-avatar,
+  .ruler-teaser.archive-spine.ruler-teaser-compact .archive-spine-avatar {
+    width: 46px;
+  }
+
+  .ruler-teaser.archive-spine .ruler-teaser-copy {
+    padding-left: 20px;
+  }
+}
