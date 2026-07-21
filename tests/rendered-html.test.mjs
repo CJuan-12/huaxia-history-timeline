@@ -497,3 +497,12 @@ test("hides the ruler profile modal scrollbar without removing scrolling", async
   assert.match(styles, /scrollbar-width: none/);
   assert.match(styles, /\.ruler-dialog-shell::\-webkit-scrollbar/);
 });
+test("uses page-mode workbench layouts and smoother page transitions", async () => {
+  const page = await readFile(new URL("../app/history-explorer.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(page, /site-mode-\$\{pageMode\}/);
+  assert.match(styles, /site-mode-constellation \.constellation-section/);
+  assert.match(styles, /site-mode-archive \.ruler-directory/);
+  assert.match(styles, /@keyframes soft-page-enter/);
+  assert.match(styles, /sheet-turn-in/);
+});

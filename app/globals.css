@@ -6502,3 +6502,306 @@ summary {
     min-height: 190px;
   }
 }
+/* Page-workbench layout: keep visual tools inside one screen when opened as standalone pages. */
+@keyframes soft-page-enter {
+  from { opacity: 0; transform: translateX(28px) rotateY(-5deg) scale(0.985); filter: blur(5px); }
+  to { opacity: 1; transform: translateX(0) rotateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes sheet-turn-in {
+  from { opacity: 0; transform: translateX(22px) rotateY(-8deg); box-shadow: -24px 20px 50px rgb(72 52 28 / 0.02); }
+  to { opacity: 1; transform: translateX(0) rotateY(0); }
+}
+
+@keyframes tool-panel-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.site-shell {
+  view-transition-name: root;
+}
+
+.timeline-rail,
+.atlas-era-tabs,
+.constellation-tabs,
+.directory-grid,
+.constellation-viewport {
+  scroll-behavior: smooth;
+}
+
+.era-panel.active {
+  animation: soft-page-enter 420ms var(--motion-soft) both;
+  transform-origin: left center;
+}
+
+.atlas-overview,
+.constellation-panel,
+.archive-vault {
+  animation: tool-panel-rise 420ms var(--motion-soft) both;
+}
+
+.atlas-era-tabs button.active,
+.constellation-tabs button.active,
+.era-jump button.active {
+  animation: sheet-turn-in 300ms var(--motion-soft) both;
+  transform-origin: left center;
+}
+
+.event-card[open] {
+  animation: sheet-turn-in 280ms var(--motion-soft) both;
+  transform-origin: top left;
+}
+
+/* Relationship constellation: standalone page behaves like a full-screen canvas. */
+.site-mode-constellation .constellation-section {
+  display: grid;
+  gap: 12px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: calc(100svh - 72px);
+  overflow: hidden;
+  padding: clamp(16px, 2.8vw, 34px);
+}
+
+.site-mode-constellation .constellation-heading,
+.site-mode-constellation .constellation-tabs,
+.site-mode-constellation .constellation-panel {
+  max-width: none;
+  width: 100%;
+}
+
+.site-mode-constellation .constellation-heading {
+  align-items: center;
+  gap: clamp(18px, 4vw, 54px);
+  grid-template-columns: minmax(230px, 0.48fr) minmax(0, 1fr);
+  padding-bottom: 14px;
+}
+
+.site-mode-constellation .constellation-heading h2 {
+  font-size: clamp(28px, 3.6vw, 50px);
+}
+
+.site-mode-constellation .constellation-heading-copy > p,
+.site-mode-constellation .constellation-panel-heading > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.site-mode-constellation .constellation-tabs {
+  margin: 0;
+  padding-bottom: 4px;
+}
+
+.site-mode-constellation .constellation-tabs button {
+  flex-basis: clamp(168px, 16vw, 218px);
+  min-height: 58px;
+  padding: 10px 13px;
+}
+
+.site-mode-constellation .constellation-panel {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) minmax(76px, 13vh);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.site-mode-constellation .constellation-panel-heading {
+  align-items: center;
+  padding: 14px 18px 12px;
+}
+
+.site-mode-constellation .constellation-legend,
+.site-mode-constellation .constellation-canvas-tools {
+  padding-inline: 18px;
+}
+
+.site-mode-constellation .constellation-viewport {
+  height: auto;
+  min-height: 0;
+  scrollbar-width: none;
+}
+
+.site-mode-constellation .constellation-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.site-mode-constellation .constellation-relations {
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  max-height: none;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.site-mode-constellation .constellation-relations::-webkit-scrollbar {
+  display: none;
+}
+
+.site-mode-constellation .constellation-relations li {
+  min-height: 0;
+  padding: 12px 16px;
+}
+
+.site-mode-constellation .constellation-relations p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* Ruler archive: standalone page becomes a one-screen archive desk with an internal drawer. */
+.site-mode-archive .ruler-directory {
+  display: grid;
+  gap: 14px;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100svh - 72px);
+  max-width: none;
+  overflow: hidden;
+  padding: clamp(16px, 2.8vw, 34px);
+}
+
+.site-mode-archive .directory-heading {
+  align-items: center;
+  gap: clamp(18px, 4vw, 52px);
+  grid-template-columns: minmax(240px, 0.46fr) minmax(0, 1fr);
+  padding-bottom: 14px;
+}
+
+.site-mode-archive .directory-heading h2 {
+  font-size: clamp(30px, 4vw, 54px);
+}
+
+.site-mode-archive .directory-heading > p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.site-mode-archive .archive-vault {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  margin-top: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(14px, 2vw, 22px);
+}
+
+.site-mode-archive .methodology-card {
+  margin-top: 0;
+}
+
+.site-mode-archive .methodology-card:not([open]) summary {
+  min-height: 54px;
+}
+
+.site-mode-archive .methodology-body {
+  max-height: 24vh;
+  overflow: auto;
+}
+
+.site-mode-archive .archive-vault .directory-controls {
+  margin: 12px 0 10px;
+  padding: 14px;
+}
+
+.site-mode-archive .archive-vault .directory-status {
+  margin-bottom: 12px;
+  min-height: 58px;
+  padding-block: 12px;
+}
+
+.site-mode-archive .directory-grid {
+  align-content: start;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+  scrollbar-width: none;
+}
+
+.site-mode-archive .directory-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.site-mode-archive .archive-note {
+  margin-top: 12px;
+  max-height: 54px;
+  overflow: hidden;
+  padding-top: 12px;
+}
+
+.site-mode-archive .ruler-teaser.archive-spine,
+.site-mode-archive .directory-grid .ruler-teaser.archive-spine {
+  min-height: 84px;
+}
+
+/* Atlas and timeline: keep images first and make panel changes feel like page turns. */
+.site-mode-atlas .culture-atlas-section {
+  min-height: calc(100svh - 72px);
+  padding-block: clamp(22px, 4vw, 54px);
+}
+
+.site-mode-atlas .atlas-overview {
+  max-width: min(1680px, calc(100vw - 44px));
+}
+
+.site-mode-atlas .atlas-layout {
+  grid-template-columns: minmax(0, 2.7fr) minmax(250px, 0.8fr);
+}
+
+.site-mode-atlas .atlas-map {
+  max-height: min(76vh, 820px);
+}
+
+.site-mode-timeline .timeline-section {
+  min-height: calc(100svh - 72px);
+  padding-block: clamp(22px, 4vw, 54px);
+}
+
+.site-mode-timeline .timeline-rail {
+  min-height: min(72vh, 780px);
+  perspective: 1400px;
+}
+
+.site-mode-timeline .era-panel {
+  max-height: min(72vh, 780px);
+  overflow: auto;
+  scrollbar-width: none;
+}
+
+.site-mode-timeline .era-panel::-webkit-scrollbar {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .site-mode-archive .ruler-directory,
+  .site-mode-constellation .constellation-section {
+    height: auto;
+    min-height: calc(100svh - 72px);
+    overflow: visible;
+  }
+
+  .site-mode-archive .archive-vault,
+  .site-mode-constellation .constellation-panel {
+    display: block;
+    overflow: visible;
+  }
+
+  .site-mode-archive .directory-grid,
+  .site-mode-constellation .constellation-relations {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .site-mode-archive .directory-heading,
+  .site-mode-constellation .constellation-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .site-mode-atlas .atlas-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1165,7 +1165,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
   );
 
   return (
-    <main className="site-shell">
+    <main className={`site-shell site-mode-${pageMode}`}> 
       <header className="topbar">
         <a className="brand" href={routeHref("/")} aria-label="返回首页">
           <span className="brand-mark">史</span>
