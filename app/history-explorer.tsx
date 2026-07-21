@@ -558,38 +558,22 @@ function RulerTeaser({
 }) {
   return (
     <button
-      className={`ruler-teaser${compact ? " ruler-teaser-compact" : ""}${extracting ? " ruler-teaser-extracting" : ""}`}
+      className={`ruler-teaser archive-spine${compact ? " ruler-teaser-compact" : ""}${extracting ? " ruler-teaser-extracting" : ""}`}
       type="button"
       aria-haspopup="dialog"
       aria-busy={extracting || undefined}
+      aria-label={ruler.name + '\uFF0C' + ruler.reign + '\uFF0C\u62BD\u51FA\u541B\u738B\u6863\u6848\u67E5\u770B\u5B8C\u6574\u4FE1\u606F'}
       data-archive-file={ruler.id}
       onClick={(event) => onOpen(ruler, event.currentTarget)}
     >
-      <span className="ruler-teaser-portrait">
-        <RulerPortrait ruler={ruler} />
-        <small>{ruler.portrait.kind}</small>
-      </span>
       <span className="ruler-teaser-copy">
-        <span className="ruler-dynasty">{ruler.polity} · {ruler.reign}</span>
-        <span
-          className={`mbti-mini${ruler.psychology.confidence === "low" ? " low-confidence" : ""}`}
-          aria-label={`MBTI 行为推演：${ruler.psychology.code}，${ruler.psychology.confidenceLabel}`}
-        >
-          {ruler.psychology.code}{ruler.psychology.confidence === "low" ? <sup aria-hidden="true">?</sup> : null}
-        </span>
+        <span className="archive-spine-meta">{ruler.reign}</span>
         <strong>{ruler.name}</strong>
-        <em>{ruler.personalName} · {ruler.title}</em>
-        {!compact ? (
-          <span className="trait-list" aria-label="性格标签">
-            {ruler.traits.map((trait) => <i key={trait}>{trait}</i>)}
-          </span>
-        ) : null}
-        <span className="ruler-open-label">查看身份卡 →</span>
+        <span className="ruler-open-label">{"\u62BD\u51FA\u6863\u6848 \u2192"}</span>
       </span>
     </button>
   );
 }
-
 type ExplorerPageMode = "all" | "timeline" | "atlas" | "constellation" | "archive";
 
 export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: ExplorerPageMode }) {
