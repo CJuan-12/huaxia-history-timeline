@@ -490,3 +490,10 @@ test("supports a static GitHub Pages deployment under the repository path", asyn
   assert.match(workflow, /NEXT_PUBLIC_SITE_ORIGIN/);
   await access(new URL("../public/.nojekyll", import.meta.url));
 });
+
+test("hides the ruler profile modal scrollbar without removing scrolling", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.ruler-dialog-shell \{/);
+  assert.match(styles, /scrollbar-width: none/);
+  assert.match(styles, /\.ruler-dialog-shell::\-webkit-scrollbar/);
+});
