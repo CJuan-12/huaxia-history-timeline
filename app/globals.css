@@ -7214,3 +7214,83 @@ summary {
     inset -14px 0 22px rgb(79 58 33 / 0.1),
     0 10px 18px rgb(72 52 28 / 0.08);
 }
+
+/* Generated homepage history backdrop with separate animated atmosphere layers. */
+@keyframes portal-cloud-drift {
+  from { transform: translate3d(-2vw, 0, 0) rotate(-1deg); }
+  to { transform: translate3d(4vw, -1.6vh, 0) rotate(1.4deg); }
+}
+
+@keyframes portal-star-float {
+  0%, 100% { opacity: 0.42; transform: translate3d(0, 0, 0) scale(1); }
+  50% { opacity: 0.72; transform: translate3d(-1.8vw, 1.4vh, 0) scale(1.035); }
+}
+
+.portal-shell {
+  background:
+    linear-gradient(180deg, rgb(243 231 201 / 0.18), rgb(255 250 238 / 0.78) 58%, rgb(232 214 178 / 0.62)),
+    radial-gradient(circle at 50% 42%, rgb(255 253 248 / 0.42), transparent 30rem),
+    url("/backgrounds/home-history-parallax-bg.png") center / cover no-repeat,
+    var(--paper);
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.portal-shell::before,
+.portal-shell::after {
+  content: "";
+  inset: 72px 0 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.portal-shell::before {
+  animation: portal-cloud-drift 16s ease-in-out infinite alternate;
+  background:
+    radial-gradient(ellipse at 12% 34%, rgb(255 249 231 / 0.36) 0 8%, transparent 22%),
+    radial-gradient(ellipse at 78% 64%, rgb(255 246 224 / 0.3) 0 7%, transparent 20%),
+    radial-gradient(ellipse at 53% 18%, rgb(255 251 238 / 0.24) 0 6%, transparent 18%);
+  filter: blur(1px);
+  opacity: 0.9;
+}
+
+.portal-shell::after {
+  animation: portal-star-float 12s ease-in-out infinite;
+  background:
+    radial-gradient(circle at 18% 24%, rgb(215 166 66 / 0.7) 0 2px, transparent 3px),
+    radial-gradient(circle at 31% 68%, rgb(157 51 40 / 0.34) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 30%, rgb(215 166 66 / 0.72) 0 2px, transparent 3px),
+    radial-gradient(circle at 86% 72%, rgb(79 138 114 / 0.38) 0 3px, transparent 4px),
+    linear-gradient(115deg, transparent 0 64%, rgb(157 51 40 / 0.12) 64.2% 64.6%, transparent 65%);
+  background-size: 240px 220px, 360px 300px, 280px 260px, 420px 360px, 100% 100%;
+  mix-blend-mode: multiply;
+  opacity: 0.75;
+}
+
+.portal-topbar,
+.portal-hero,
+.portal-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.portal-topbar {
+  background: rgb(243 239 229 / 0.82);
+}
+
+.portal-card {
+  backdrop-filter: blur(2px);
+  background:
+    radial-gradient(circle at 88% 10%, rgb(255 255 255 / 0.58), transparent 28%),
+    linear-gradient(145deg, rgb(255 253 248 / 0.88), rgb(247 237 218 / 0.8));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-shell::before,
+  .portal-shell::after {
+    animation: none;
+  }
+}

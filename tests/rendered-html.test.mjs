@@ -536,3 +536,12 @@ test("centers the ruler dossier dialog on a full-screen stage", async () => {
   assert.match(styles, /\.ruler-dialog \{[\s\S]*place-items: center/);
   assert.match(styles, /\.ruler-dialog-shell \{[\s\S]*width: min\(1060px, calc\(100vw - clamp\(28px, 7vw, 96px\)\)\)/);
 });
+
+test("uses the generated homepage history backdrop with animated layers", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  await access(new URL("../public/backgrounds/home-history-parallax-bg.png", import.meta.url));
+  assert.match(styles, /home-history-parallax-bg\.png/);
+  assert.match(styles, /@keyframes portal-cloud-drift/);
+  assert.match(styles, /@keyframes portal-star-float/);
+  assert.match(styles, /\.portal-shell::before,[\s\S]*\.portal-shell::after/);
+});
