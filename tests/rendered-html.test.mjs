@@ -573,3 +573,11 @@ test("uses generated image frames for the four homepage entry cards", async () =
   assert.match(styles, /Generated image frames for the four homepage entry cards/);
   assert.match(styles, /\.portal-card::before \{[\s\S]*background: var\(--portal-card-frame\)/);
 });
+
+test("lets generated frames replace the original homepage card borders", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /Let generated frames fully replace the original portal card border/);
+  assert.match(styles, /\.portal-card,[\s\S]*\.portal-card:hover,[\s\S]*\.portal-card:focus-visible \{[\s\S]*border: 0;[\s\S]*box-shadow: none/);
+  assert.match(styles, /\.portal-card::before \{[\s\S]*background: var\(--portal-card-frame\)/);
+  assert.match(styles, /\.portal-card::after \{[\s\S]*linear-gradient\(145deg, rgb\(255 252 242 \/ 0\.76\)/);
+});
