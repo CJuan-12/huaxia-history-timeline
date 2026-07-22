@@ -528,3 +528,11 @@ test("replaces glassy hover sheen with paper-like hover states", async () => {
   assert.match(styles, /\.portal-card:hover,[\s\S]*box-shadow:[\s\S]*0 16px 28px/);
   assert.match(styles, /ruler-teaser\.archive-spine:hover \.ruler-teaser-copy/);
 });
+
+test("centers the ruler dossier dialog on a full-screen stage", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /Keep the ruler dossier visually centered/);
+  assert.match(styles, /\.ruler-dialog \{[\s\S]*position: fixed;[\s\S]*width: 100vw/);
+  assert.match(styles, /\.ruler-dialog \{[\s\S]*place-items: center/);
+  assert.match(styles, /\.ruler-dialog-shell \{[\s\S]*width: min\(1060px, calc\(100vw - clamp\(28px, 7vw, 96px\)\)\)/);
+});
