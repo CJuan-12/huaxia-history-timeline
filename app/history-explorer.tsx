@@ -74,6 +74,31 @@ type Era = {
   events: EventItem[];
 };
 
+const eraFrameAssets: Record<string, { src: string; accent: string }> = {
+  xia: { src: "/timeline-frames/era-frame-xia.webp", accent: "#9a5f35" },
+  shang: { src: "/timeline-frames/era-frame-shang.webp", accent: "#7c4c2f" },
+  "western-zhou": { src: "/timeline-frames/era-frame-western-zhou.webp", accent: "#8f6b34" },
+  "eastern-zhou": { src: "/timeline-frames/era-frame-eastern-zhou.webp", accent: "#6e7450" },
+  qin: { src: "/timeline-frames/era-frame-qin.webp", accent: "#9d3328" },
+  "western-han": { src: "/timeline-frames/era-frame-western-han.webp", accent: "#b06d36" },
+  xin: { src: "/timeline-frames/era-frame-xin.webp", accent: "#7f6a3b" },
+  "eastern-han": { src: "/timeline-frames/era-frame-eastern-han.webp", accent: "#8a7a48" },
+  "three-kingdoms": { src: "/timeline-frames/era-frame-three-kingdoms.webp", accent: "#8b3f34" },
+  jin: { src: "/timeline-frames/era-frame-jin.webp", accent: "#5e806b" },
+  "sixteen-kingdoms": { src: "/timeline-frames/era-frame-sixteen-kingdoms.webp", accent: "#7d5d44" },
+  "northern-southern": { src: "/timeline-frames/era-frame-northern-southern.webp", accent: "#6f7d80" },
+  sui: { src: "/timeline-frames/era-frame-sui.webp", accent: "#426f83" },
+  tang: { src: "/timeline-frames/era-frame-tang.webp", accent: "#b14245" },
+  "five-dynasties": { src: "/timeline-frames/era-frame-five-dynasties.webp", accent: "#8a5933" },
+  liao: { src: "/timeline-frames/era-frame-liao.webp", accent: "#6c6f4c" },
+  "northern-song": { src: "/timeline-frames/era-frame-northern-song.webp", accent: "#3f7d7a" },
+  "western-xia": { src: "/timeline-frames/era-frame-western-xia.webp", accent: "#a67a37" },
+  "jin-dynasty": { src: "/timeline-frames/era-frame-jin-dynasty.webp", accent: "#7d4d36" },
+  "southern-song": { src: "/timeline-frames/era-frame-southern-song.webp", accent: "#4c8374" },
+  yuan: { src: "/timeline-frames/era-frame-yuan.webp", accent: "#476f91" },
+  ming: { src: "/timeline-frames/era-frame-ming.webp", accent: "#356d95" },
+  qing: { src: "/timeline-frames/era-frame-qing.webp", accent: "#6b7f66" },
+};
 const atlasStatusLabels = {
   core: "长期核心",
   controlled: "一般控制",
@@ -1284,6 +1309,10 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
                 panelRefs.current[index] = node;
               }}
               className={`era-panel${index === current ? " active" : ""}`}
+              style={{
+                "--era-frame": `url("${publicBasePath}${eraFrameAssets[era.id].src}")`,
+                "--era-accent": eraFrameAssets[era.id].accent,
+              } as CSSProperties}
               data-era-index={index}
               aria-labelledby={`era-${era.id}`}
             >

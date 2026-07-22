@@ -7497,3 +7497,80 @@ summary {
     min-height: 310px;
   }
 }
+
+/* Timeline dynasty generated image frames.
+   Measured target: standalone timeline panels render at 980px × 632px on desktop (1.55:1), matching these 1550 × 1000 assets. */
+.era-panel,
+.era-panel.active {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.era-panel {
+  border-radius: 34px;
+  min-height: 632px;
+  overflow: auto;
+  padding: clamp(48px, 5.2vw, 70px) clamp(42px, 5vw, 76px) clamp(46px, 5vw, 68px);
+}
+
+.site-mode-timeline .era-panel {
+  height: 632px;
+  max-height: 632px;
+  overflow: auto;
+}
+
+.era-panel::before {
+  background: var(--era-frame) center / 100% auto no-repeat;
+  content: "";
+  filter: drop-shadow(0 22px 32px rgb(57 39 21 / 0.16));
+  inset: 0;
+  opacity: 0.98;
+  pointer-events: none;
+  position: absolute;
+  transform: none;
+  transition: filter 260ms ease, opacity 240ms ease;
+  z-index: 0;
+}
+
+.era-panel.active::before {
+  filter: drop-shadow(0 28px 42px rgb(57 39 21 / 0.2));
+  opacity: 1;
+}
+
+.era-panel::after {
+  color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 12%, transparent);
+  z-index: 0;
+}
+
+.era-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.era-heading {
+  border-bottom-color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 28%, transparent);
+}
+
+.era-phase,
+.events-heading span,
+.rulers-card summary span,
+.fall-card > span {
+  color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 86%, #3a281d 14%);
+}
+
+@media (max-width: 760px) {
+  .era-panel {
+    min-height: 610px;
+    padding: 42px 30px 40px;
+  }
+
+  .site-mode-timeline .era-panel {
+    height: auto;
+    max-height: none;
+  }
+
+  .era-panel::before {
+    background-size: auto 100%;
+  }
+}

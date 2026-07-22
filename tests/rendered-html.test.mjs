@@ -596,3 +596,45 @@ test("uses Chinese-only homepage card layout with generated arrow art", async ()
   assert.match(styles, /华文行楷/);
   assert.match(styles, /background: var\(--portal-card-arrow\) center \/ contain no-repeat/);
 });
+
+test("uses generated measured frames for timeline dynasty panels", async () => {
+  const explorer = await readFile(new URL("../app/history-explorer.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const eraIds = [
+    "xia",
+    "shang",
+    "western-zhou",
+    "eastern-zhou",
+    "qin",
+    "western-han",
+    "xin",
+    "eastern-han",
+    "three-kingdoms",
+    "jin",
+    "sixteen-kingdoms",
+    "northern-southern",
+    "sui",
+    "tang",
+    "five-dynasties",
+    "liao",
+    "northern-song",
+    "western-xia",
+    "jin-dynasty",
+    "southern-song",
+    "yuan",
+    "ming",
+    "qing",
+  ];
+  assert.match(explorer, /const eraFrameAssets/);
+  assert.match(explorer, /--era-frame/);
+  assert.match(explorer, /--era-accent/);
+  for (const id of eraIds) {
+    const file = `era-frame-${id}.webp`;
+    await access(new URL(`../public/timeline-frames/${file}`, import.meta.url));
+    assert.match(explorer, new RegExp(file.replace(".", "\\.")));
+  }
+  assert.match(styles, /Timeline dynasty generated image frames/);
+  assert.match(styles, /1550 × 1000 assets/);
+  assert.match(styles, /background: var\(--era-frame\) center \/ 100% auto no-repeat/);
+  assert.match(styles, /\.era-panel,\n\.era-panel\.active \{[\s\S]*border: 0;[\s\S]*box-shadow: none/);
+});
