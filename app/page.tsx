@@ -1,7 +1,11 @@
+import type { CSSProperties } from "react";
 import { catalogStats } from "./ruler-catalog";
 import { literaryFigureStats } from "./literary-figures";
 
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const portalBackgroundStyle = {
+  "--portal-history-bg": `url("${publicBasePath}/backgrounds/home-history-parallax-bg.png")`,
+} as CSSProperties;
 
 const entries = [
   {
@@ -40,7 +44,7 @@ const entries = [
 
 export default function Home() {
   return (
-    <main className="site-shell portal-shell">
+    <main className="site-shell portal-shell" style={portalBackgroundStyle}>
       <header className="topbar portal-topbar">
         <a className="brand" href={`${publicBasePath}/`} aria-label="华夏长卷首页">
           <span className="brand-mark">史</span>

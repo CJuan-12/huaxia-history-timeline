@@ -7228,9 +7228,9 @@ summary {
 
 .portal-shell {
   background:
-    linear-gradient(180deg, rgb(243 231 201 / 0.18), rgb(255 250 238 / 0.78) 58%, rgb(232 214 178 / 0.62)),
+    linear-gradient(180deg, rgb(243 231 201 / 0.08), rgb(255 250 238 / 0.5) 58%, rgb(232 214 178 / 0.38)),
     radial-gradient(circle at 50% 42%, rgb(255 253 248 / 0.42), transparent 30rem),
-    url("/backgrounds/home-history-parallax-bg.png") center / cover no-repeat,
+    var(--portal-history-bg, url("/backgrounds/home-history-parallax-bg.png")) center / cover no-repeat,
     var(--paper);
   isolation: isolate;
   min-height: 100vh;

@@ -545,3 +545,12 @@ test("uses the generated homepage history backdrop with animated layers", async 
   assert.match(styles, /@keyframes portal-star-float/);
   assert.match(styles, /\.portal-shell::before,[\s\S]*\.portal-shell::after/);
 });
+
+test("injects the homepage backdrop path through the deployment base path", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(page, /portalBackgroundStyle/);
+  assert.match(page, /\$\{publicBasePath\}\/backgrounds\/home-history-parallax-bg\.png/);
+  assert.match(page, /style=\{portalBackgroundStyle\}/);
+  assert.match(styles, /var\(--portal-history-bg, url\("\/backgrounds\/home-history-parallax-bg\.png"\)\)/);
+});
