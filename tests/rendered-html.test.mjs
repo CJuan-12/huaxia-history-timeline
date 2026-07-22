@@ -539,8 +539,8 @@ test("centers the ruler dossier dialog on a full-screen stage", async () => {
 
 test("uses the generated homepage history backdrop with animated layers", async () => {
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  await access(new URL("../public/backgrounds/home-history-parallax-bg.png", import.meta.url));
-  assert.match(styles, /home-history-parallax-bg\.png/);
+  await access(new URL("../public/backgrounds/home-history-parallax-bg.webp", import.meta.url));
+  assert.match(styles, /home-history-parallax-bg\.webp/);
   assert.match(styles, /@keyframes portal-cloud-drift/);
   assert.match(styles, /@keyframes portal-star-float/);
   assert.match(styles, /\.portal-shell::before,[\s\S]*\.portal-shell::after/);
@@ -550,19 +550,19 @@ test("injects the homepage backdrop path through the deployment base path", asyn
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(page, /portalBackgroundStyle/);
-  assert.match(page, /\$\{publicBasePath\}\/backgrounds\/home-history-parallax-bg\.png/);
+  assert.match(page, /\$\{publicBasePath\}\/backgrounds\/home-history-parallax-bg\.webp/);
   assert.match(page, /style=\{portalBackgroundStyle\}/);
-  assert.match(styles, /var\(--portal-history-bg, url\("\/backgrounds\/home-history-parallax-bg\.png"\)\)/);
+  assert.match(styles, /var\(--portal-history-bg, url\("\/backgrounds\/home-history-parallax-bg\.webp"\)\)/);
 });
 
 test("uses generated image frames for the four homepage entry cards", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
   const frameFiles = [
-    "home-card-border-timeline.png",
-    "home-card-border-atlas.png",
-    "home-card-border-constellation.png",
-    "home-card-border-archive.png",
+    "home-card-border-timeline.webp",
+    "home-card-border-atlas.webp",
+    "home-card-border-constellation.webp",
+    "home-card-border-archive.webp",
   ];
   for (const file of frameFiles) {
     await access(new URL(`../public/borders/${file}`, import.meta.url));
@@ -585,7 +585,7 @@ test("lets generated frames replace the original homepage card borders", async (
 test("uses Chinese-only homepage card layout with generated arrow art", async () => {
   const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
   const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
-  await access(new URL("../public/ornaments/home-card-arrow.png", import.meta.url));
+  await access(new URL("../public/ornaments/home-card-arrow.webp", import.meta.url));
   assert.doesNotMatch(page, /portal-card-eyebrow/);
   assert.doesNotMatch(page, /entry\.glyph|entry\.eyebrow/);
   assert.match(page, /portal-card-index/);
@@ -593,6 +593,6 @@ test("uses Chinese-only homepage card layout with generated arrow art", async ()
   assert.match(page, /--portal-card-arrow/);
   assert.match(styles, /Homepage card typography and layout pass/);
   assert.match(styles, /aspect-ratio: 1 \/ 1/);
-  assert.match(styles, /霞鹜文楷/);
+  assert.match(styles, /华文行楷/);
   assert.match(styles, /background: var\(--portal-card-arrow\) center \/ contain no-repeat/);
 });
