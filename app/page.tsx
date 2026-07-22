@@ -5,14 +5,13 @@ import { literaryFigureStats } from "./literary-figures";
 const publicBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const portalBackgroundStyle = {
   "--portal-history-bg": `url("${publicBasePath}/backgrounds/home-history-parallax-bg.png")`,
+  "--portal-card-arrow": `url("${publicBasePath}/ornaments/home-card-arrow.png")`,
 } as CSSProperties;
 
 const entries = [
   {
     href: "/timeline",
     frame: "/borders/home-card-border-timeline.png",
-    eyebrow: "TIMELINE",
-    glyph: "↔",
     title: "朝代时间轴",
     text: "横向滑动查看 23 个历史时期，展开大事记、代表君王和覆灭原因。",
     stat: "23 个时期",
@@ -20,8 +19,6 @@ const entries = [
   {
     href: "/atlas",
     frame: "/borders/home-card-border-atlas.png",
-    eyebrow: "ATLAS",
-    glyph: "◌",
     title: "文化版图",
     text: "按朝代或君主统治阶段查看版图、地域风气、名人画像和古诗词。",
     stat: `${literaryFigureStats.total} 位名人`,
@@ -29,8 +26,6 @@ const entries = [
   {
     href: "/constellation",
     frame: "/borders/home-card-border-constellation.png",
-    eyebrow: "CONSTELLATION",
-    glyph: "✦",
     title: "帝王关系星谱",
     text: "用可拖拽的关系图查看继承、家族、共治和冲突。",
     stat: "关系网络",
@@ -38,8 +33,6 @@ const entries = [
   {
     href: "/rulers",
     frame: "/borders/home-card-border-archive.png",
-    eyebrow: "ARCHIVE",
-    glyph: "☉",
     title: "君王档案馆",
     text: "搜索全部君主，查看身份、母亲来源、关系行为和 MBTI 推演。",
     stat: `${catalogStats.total} 位君主`,
@@ -73,11 +66,13 @@ export default function Home() {
       <section className="portal-grid" aria-label="功能入口">
         {entries.map((entry, index) => (
           <a className="portal-card" href={`${publicBasePath}${entry.href}`} key={entry.href} style={{ "--portal-card-frame": `url("${publicBasePath}${entry.frame}")` } as CSSProperties}>
-            <span className="portal-card-eyebrow"><b aria-hidden="true">{entry.glyph}</b>{entry.eyebrow}</span>
+            <span className="portal-card-index" aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
             <h2>{entry.title}</h2>
             <p>{entry.text}</p>
-            <strong>{entry.stat}</strong>
-            <em aria-hidden="true">{String(index + 1).padStart(2, "0")} →</em>
+            <span className="portal-card-footer">
+              <strong>{entry.stat}</strong>
+              <span className="portal-card-arrow" aria-hidden="true" />
+            </span>
           </a>
         ))}
       </section>

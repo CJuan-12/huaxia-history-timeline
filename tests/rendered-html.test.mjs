@@ -581,3 +581,18 @@ test("lets generated frames replace the original homepage card borders", async (
   assert.match(styles, /\.portal-card::before \{[\s\S]*background: var\(--portal-card-frame\)/);
   assert.match(styles, /\.portal-card::after \{[\s\S]*linear-gradient\(145deg, rgb\(255 252 242 \/ 0\.76\)/);
 });
+
+test("uses Chinese-only homepage card layout with generated arrow art", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  await access(new URL("../public/ornaments/home-card-arrow.png", import.meta.url));
+  assert.doesNotMatch(page, /portal-card-eyebrow/);
+  assert.doesNotMatch(page, /entry\.glyph|entry\.eyebrow/);
+  assert.match(page, /portal-card-index/);
+  assert.match(page, /portal-card-arrow/);
+  assert.match(page, /--portal-card-arrow/);
+  assert.match(styles, /Homepage card typography and layout pass/);
+  assert.match(styles, /aspect-ratio: 1 \/ 1/);
+  assert.match(styles, /霞鹜文楷/);
+  assert.match(styles, /background: var\(--portal-card-arrow\) center \/ contain no-repeat/);
+});
