@@ -634,7 +634,7 @@ test("uses generated measured frames for timeline dynasty panels", async () => {
     assert.match(explorer, new RegExp(file.replace(".", "\\.")));
   }
   assert.match(styles, /Timeline dynasty generated image frames/);
-  assert.match(styles, /1550 × 1000 assets/);
+  assert.match(styles, /1550 x 1000 assets/);
   assert.match(styles, /background: var\(--era-frame\) center \/ 100% auto no-repeat/);
   assert.match(styles, /\.era-panel,\n\.era-panel\.active \{[\s\S]*border: 0;[\s\S]*box-shadow: none/);
 });

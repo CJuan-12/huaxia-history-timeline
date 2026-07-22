@@ -7499,7 +7499,7 @@ summary {
 }
 
 /* Timeline dynasty generated image frames.
-   Measured target: standalone timeline panels render at 980px × 632px on desktop (1.55:1), matching these 1550 × 1000 assets. */
+   Measured target: standalone timeline panels render at 980px x 632px on desktop (1.55:1), matching these 1550 x 1000 assets. */
 .era-panel,
 .era-panel.active {
   background: transparent;
@@ -7511,7 +7511,7 @@ summary {
   border-radius: 34px;
   min-height: 632px;
   overflow: auto;
-  padding: clamp(48px, 5.2vw, 70px) clamp(42px, 5vw, 76px) clamp(46px, 5vw, 68px);
+  padding: clamp(58px, 5.7vw, 78px) clamp(48px, 5.4vw, 84px) clamp(76px, 6.3vw, 98px);
 }
 
 .site-mode-timeline .era-panel {
@@ -7523,23 +7523,41 @@ summary {
 .era-panel::before {
   background: var(--era-frame) center / 100% auto no-repeat;
   content: "";
-  filter: drop-shadow(0 22px 32px rgb(57 39 21 / 0.16));
+  filter: none;
   inset: 0;
-  opacity: 0.98;
+  opacity: 1;
   pointer-events: none;
   position: absolute;
   transform: none;
-  transition: filter 260ms ease, opacity 240ms ease;
-  z-index: 0;
+  transition: opacity 240ms ease;
+  z-index: 2;
 }
 
 .era-panel.active::before {
-  filter: drop-shadow(0 28px 42px rgb(57 39 21 / 0.2));
+  filter: none;
   opacity: 1;
 }
 
 .era-panel::after {
-  color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 12%, transparent);
+  align-items: flex-start;
+  background:
+    radial-gradient(circle at 82% 20%, color-mix(in srgb, var(--era-accent, var(--cinnabar)) 10%, transparent), transparent 22rem),
+    linear-gradient(145deg, rgb(255 253 246 / 0.82), rgb(247 240 224 / 0.58)) center / calc(100% - 166px) calc(100% - 168px) no-repeat;
+  bottom: auto;
+  color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 11%, transparent);
+  content: attr(data-era-index);
+  display: flex;
+  font-family: var(--serif);
+  font-size: clamp(140px, 20vw, 270px);
+  font-variant-numeric: tabular-nums;
+  inset: 0;
+  justify-content: flex-end;
+  line-height: 0.82;
+  padding: clamp(76px, 7vw, 104px) clamp(82px, 7vw, 112px) 0 0;
+  pointer-events: none;
+  position: absolute;
+  right: auto;
+  top: auto;
   z-index: 0;
 }
 
@@ -7549,7 +7567,7 @@ summary {
 }
 
 .era-heading {
-  border-bottom-color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 28%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--era-accent, var(--cinnabar)) 26%, transparent);
 }
 
 .era-phase,
@@ -7562,7 +7580,7 @@ summary {
 @media (max-width: 760px) {
   .era-panel {
     min-height: 610px;
-    padding: 42px 30px 40px;
+    padding: 50px 34px 74px;
   }
 
   .site-mode-timeline .era-panel {
@@ -7572,5 +7590,11 @@ summary {
 
   .era-panel::before {
     background-size: auto 100%;
+  }
+
+  .era-panel::after {
+    background-size: calc(100% - 82px) calc(100% - 96px);
+    font-size: 130px;
+    padding: 76px 42px 0 0;
   }
 }
