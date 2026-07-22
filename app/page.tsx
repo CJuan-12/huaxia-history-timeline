@@ -10,6 +10,7 @@ const portalBackgroundStyle = {
 const entries = [
   {
     href: "/timeline",
+    frame: "/borders/home-card-border-timeline.png",
     eyebrow: "TIMELINE",
     glyph: "↔",
     title: "朝代时间轴",
@@ -18,6 +19,7 @@ const entries = [
   },
   {
     href: "/atlas",
+    frame: "/borders/home-card-border-atlas.png",
     eyebrow: "ATLAS",
     glyph: "◌",
     title: "文化版图",
@@ -26,6 +28,7 @@ const entries = [
   },
   {
     href: "/constellation",
+    frame: "/borders/home-card-border-constellation.png",
     eyebrow: "CONSTELLATION",
     glyph: "✦",
     title: "帝王关系星谱",
@@ -34,6 +37,7 @@ const entries = [
   },
   {
     href: "/rulers",
+    frame: "/borders/home-card-border-archive.png",
     eyebrow: "ARCHIVE",
     glyph: "☉",
     title: "君王档案馆",
@@ -68,7 +72,7 @@ export default function Home() {
 
       <section className="portal-grid" aria-label="功能入口">
         {entries.map((entry, index) => (
-          <a className="portal-card" href={`${publicBasePath}${entry.href}`} key={entry.href}>
+          <a className="portal-card" href={`${publicBasePath}${entry.href}`} key={entry.href} style={{ "--portal-card-frame": `url("${publicBasePath}${entry.frame}")` } as CSSProperties}>
             <span className="portal-card-eyebrow"><b aria-hidden="true">{entry.glyph}</b>{entry.eyebrow}</span>
             <h2>{entry.title}</h2>
             <p>{entry.text}</p>

@@ -7294,3 +7294,46 @@ summary {
     animation: none;
   }
 }
+
+/* Generated image frames for the four homepage entry cards. */
+.portal-card {
+  isolation: isolate;
+}
+
+.portal-card::before {
+  animation: none;
+  background: var(--portal-card-frame) center / 100% 100% no-repeat;
+  content: "";
+  filter: saturate(0.96) contrast(0.96);
+  inset: 5px;
+  opacity: 0.62;
+  pointer-events: none;
+  position: absolute;
+  transform: scale(1);
+  transition: opacity 220ms ease, transform 260ms var(--motion-soft), filter 260ms ease;
+  z-index: 1;
+}
+
+.portal-card:hover::before,
+.portal-card:focus-visible::before {
+  opacity: 0.88;
+  transform: scale(1.018);
+  filter: saturate(1.05) contrast(1.02);
+}
+
+.portal-card::after {
+  z-index: 0;
+}
+
+.portal-card > span,
+.portal-card h2,
+.portal-card p,
+.portal-card strong,
+.portal-card em {
+  position: relative;
+  z-index: 2;
+}
+
+.portal-card p {
+  text-shadow: 0 1px 0 rgb(255 253 248 / 0.58);
+}

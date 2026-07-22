@@ -554,3 +554,22 @@ test("injects the homepage backdrop path through the deployment base path", asyn
   assert.match(page, /style=\{portalBackgroundStyle\}/);
   assert.match(styles, /var\(--portal-history-bg, url\("\/backgrounds\/home-history-parallax-bg\.png"\)\)/);
 });
+
+test("uses generated image frames for the four homepage entry cards", async () => {
+  const page = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  const frameFiles = [
+    "home-card-border-timeline.png",
+    "home-card-border-atlas.png",
+    "home-card-border-constellation.png",
+    "home-card-border-archive.png",
+  ];
+  for (const file of frameFiles) {
+    await access(new URL(`../public/borders/${file}`, import.meta.url));
+    assert.match(page, new RegExp(file.replace(".", "\\.")));
+  }
+  assert.match(page, /--portal-card-frame/);
+  assert.match(page, /publicBasePath\}\$\{entry\.frame\}/);
+  assert.match(styles, /Generated image frames for the four homepage entry cards/);
+  assert.match(styles, /\.portal-card::before \{[\s\S]*background: var\(--portal-card-frame\)/);
+});
