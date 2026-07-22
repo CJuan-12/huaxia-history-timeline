@@ -521,3 +521,10 @@ test("uses paper book opening motion and archive cabinet styling", async () => {
   assert.match(styles, /backdrop-filter: none/);
   assert.match(styles, /ruler-dialog-shell::after/);
 });
+test("replaces glassy hover sheen with paper-like hover states", async () => {
+  const styles = await readFile(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.portal-card::before,[\s\S]*content: none/);
+  assert.doesNotMatch(styles, /animation: ink-sheen 760ms ease/);
+  assert.match(styles, /\.portal-card:hover,[\s\S]*box-shadow:[\s\S]*0 16px 28px/);
+  assert.match(styles, /ruler-teaser\.archive-spine:hover \.ruler-teaser-copy/);
+});

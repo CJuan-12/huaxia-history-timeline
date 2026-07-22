@@ -4994,15 +4994,7 @@ footer span {
 .portal-card::before,
 .event-card::before,
 .ruler-teaser::before {
-  background: linear-gradient(90deg, transparent, rgb(255 253 248 / 0.55), transparent);
-  content: "";
-  inset: 0;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute;
-  transform: translateX(-120%) skewX(-18deg);
-  transition: opacity 180ms ease;
-  z-index: 2;
+  content: none;
 }
 
 .portal-card:hover::before,
@@ -5011,13 +5003,52 @@ footer span {
 .event-card:focus-within::before,
 .ruler-teaser:hover::before,
 .ruler-teaser:focus-visible::before {
-  animation: ink-sheen 760ms ease;
-  opacity: 1;
+  animation: none;
+  opacity: 0;
 }
 
 .ruler-teaser,
 .event-card {
   position: relative;
+}
+
+.portal-card,
+.event-card,
+.ruler-teaser {
+  transition:
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 240ms ease,
+    transform 260ms var(--motion-soft);
+}
+
+.portal-card:hover,
+.portal-card:focus-visible,
+.event-card:hover,
+.event-card:focus-within,
+.ruler-teaser:hover,
+.ruler-teaser:focus-visible {
+  background:
+    linear-gradient(135deg, rgb(255 252 242 / 0.96), rgb(245 234 211 / 0.78)),
+    var(--paper);
+  border-color: rgb(142 87 55 / 0.32);
+  box-shadow:
+    0 16px 28px rgb(87 64 38 / 0.12),
+    inset 0 0 0 1px rgb(255 255 255 / 0.36);
+}
+
+.event-card:hover,
+.event-card:focus-within,
+.ruler-teaser:hover,
+.ruler-teaser:focus-visible {
+  transform: translateY(-2px);
+}
+
+.ruler-teaser.archive-spine:hover .ruler-teaser-copy,
+.ruler-teaser.archive-spine:focus-visible .ruler-teaser-copy {
+  box-shadow:
+    inset 6px 0 0 rgb(166 55 43 / 0.2),
+    0 10px 18px rgb(90 61 40 / 0.1);
 }
 
 .ruler-teaser-portrait img,
