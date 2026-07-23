@@ -1312,6 +1312,8 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
               style={{
                 "--era-frame": `url("${publicBasePath}${eraFrameAssets[era.id].src}")`,
                 "--era-accent": eraFrameAssets[era.id].accent,
+                "--timeline-rulers-frame": `url("${publicBasePath}/timeline-frames/timeline-rulers-section-frame.webp")`,
+                "--timeline-events-frame": `url("${publicBasePath}/timeline-frames/timeline-events-section-frame.webp")`,
               } as CSSProperties}
               data-era-index={index}
               aria-labelledby={`era-${era.id}`}
@@ -1320,7 +1322,8 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
                 <span>{String(index + 1).padStart(2, "0")}</span>
               </div>
 
-              <div className="era-heading">
+              <div className="era-overview-frame" data-era-index={index}>
+                <div className="era-heading">
                 <div>
                   <p className="era-phase">{era.phase}</p>
                   <h2 id={`era-${era.id}`}>{era.name}</h2>
@@ -1342,6 +1345,7 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
                   <span>终结原因</span>
                   <p>{era.fall}</p>
                 </div>
+              </div>
               </div>
 
               {rulersByEra[era.id]?.length ? (
@@ -1375,12 +1379,13 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
                 </section>
               ) : null}
 
-              <div className="events-heading">
+              <section className="events-shell">
+                <div className="events-heading">
                 <span>大事记</span>
                 <small>点击卡片查看详情</small>
               </div>
 
-              <div className="event-grid">
+                <div className="event-grid">
                 {era.events.map((item) => (
                   <details className="event-card" key={`${era.id}-${item.title}`}>
                     <summary>
@@ -1394,7 +1399,8 @@ export default function HistoryExplorer({ pageMode = "timeline" }: { pageMode?: 
                     </div>
                   </details>
                 ))}
-              </div>
+                </div>
+              </section>
             </article>
           ))}
         </div>

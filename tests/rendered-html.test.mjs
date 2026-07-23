@@ -628,13 +628,23 @@ test("uses generated measured frames for timeline dynasty panels", async () => {
   assert.match(explorer, /const eraFrameAssets/);
   assert.match(explorer, /--era-frame/);
   assert.match(explorer, /--era-accent/);
+  assert.match(explorer, /--timeline-rulers-frame/);
+  assert.match(explorer, /--timeline-events-frame/);
+  assert.match(explorer, /era-overview-frame/);
+  assert.match(explorer, /events-shell/);
   for (const id of eraIds) {
     const file = `era-frame-${id}.webp`;
     await access(new URL(`../public/timeline-frames/${file}`, import.meta.url));
     assert.match(explorer, new RegExp(file.replace(".", "\\.")));
   }
   assert.match(styles, /Timeline dynasty generated image frames/);
-  assert.match(styles, /1550 x 1000 assets/);
+  await access(new URL(`../public/timeline-frames/timeline-rulers-section-frame.webp`, import.meta.url));
+  await access(new URL(`../public/timeline-frames/timeline-events-section-frame.webp`, import.meta.url));
+  assert.match(styles, /1550 x 1000 dynasty frame assets/);
+  assert.match(styles, /1550 x 520 generated border assets/);
   assert.match(styles, /background: var\(--era-frame\) center \/ 100% auto no-repeat/);
-  assert.match(styles, /\.era-panel,\n\.era-panel\.active \{[\s\S]*border: 0;[\s\S]*box-shadow: none/);
+  assert.match(styles, /border-image-source: var\(--timeline-rulers-frame\)/);
+  assert.match(styles, /border-image-source: var\(--timeline-events-frame\)/);
+  assert.match(styles, /\.site-mode-timeline \.era-panel \{[\s\S]*height: auto;[\s\S]*overflow: visible/);
+  assert.match(styles, /\.era-panel,\r?\n\.era-panel\.active \{[\s\S]*border: 0;[\s\S]*box-shadow: none/);
 });
