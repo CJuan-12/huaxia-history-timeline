@@ -7401,7 +7401,7 @@ summary {
 }
 
 .portal-card {
-  --portal-cn: "华文行楷", "STXingkai", "方正姚体", "FZYaoti", "Kaiti SC", KaiTi, STKaiti, "Noto Serif SC", "Source Han Serif SC", SimSun, serif;
+  --portal-cn: "HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Source Han Sans SC", Arial, sans-serif;
   aspect-ratio: 1 / 1;
   display: flex;
   flex-direction: column;
@@ -7414,7 +7414,7 @@ summary {
 .portal-card-index {
   align-self: flex-start;
   color: color-mix(in srgb, var(--card-accent, var(--cinnabar)) 76%, #2a2117 24%);
-  font-family: var(--portal-cn);
+  font-family: "DIN Alternate", "Arial Black", var(--portal-cn);
   font-size: clamp(38px, 4.8vw, 58px);
   font-weight: 700;
   letter-spacing: -0.05em;
@@ -7426,7 +7426,8 @@ summary {
 .portal-card h2 {
   color: var(--ink);
   font-family: var(--portal-cn);
-  font-size: clamp(24px, 2.4vw, 34px);
+  font-size: clamp(23px, 2.2vw, 32px);
+  font-weight: 850;
   letter-spacing: 0.02em;
   line-height: 1.08;
   margin: 0;
@@ -7435,8 +7436,9 @@ summary {
 .portal-card p {
   color: rgb(66 56 43 / 0.86);
   display: -webkit-box;
-  font-family: var(--portal-cn);
-  font-size: clamp(13px, 1.15vw, 15px);
+  font-family: var(--sans);
+  font-size: clamp(13px, 1.05vw, 15px);
+  font-weight: 500;
   line-height: 1.62;
   margin: clamp(12px, 1.5vw, 16px) 0 0;
   max-width: 18em;
@@ -7458,9 +7460,9 @@ summary {
 
 .portal-card-footer strong {
   color: color-mix(in srgb, var(--card-accent, var(--cinnabar)) 66%, #2d2418 34%);
-  font-family: var(--portal-cn);
-  font-size: 14px;
-  font-weight: 700;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .portal-card-arrow {

@@ -593,7 +593,10 @@ test("uses Chinese-only homepage card layout with generated arrow art", async ()
   assert.match(page, /--portal-card-arrow/);
   assert.match(styles, /Homepage card typography and layout pass/);
   assert.match(styles, /aspect-ratio: 1 \/ 1/);
-  assert.match(styles, /华文行楷/);
+  assert.doesNotMatch(page, /现在把原来的/);
+  assert.match(styles, /HarmonyOS Sans SC/);
+  assert.match(styles, /Microsoft YaHei UI/);
+  assert.doesNotMatch(styles, /--portal-cn: [^;]*SimSun/);
   assert.match(styles, /background: var\(--portal-card-arrow\) center \/ contain no-repeat/);
 });
 

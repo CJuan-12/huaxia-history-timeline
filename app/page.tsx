@@ -58,9 +58,6 @@ export default function Home() {
       <section className="portal-hero" aria-labelledby="portal-title">
         <p className="eyebrow">中国古代历史资料站</p>
         <h1 id="portal-title">选择一种方式进入历史</h1>
-        <p>
-          现在把原来的一条长页面拆成几个独立入口：想按时间看，就进时间轴；想看地图、名人和古诗词，就进文化版图；想查皇帝关系或身份卡，也有单独页面。
-        </p>
       </section>
 
       <section className="portal-grid" aria-label="功能入口">
